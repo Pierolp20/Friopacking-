@@ -1,0 +1,222 @@
+{
+  "proveedoresAutorizados": [
+    {
+      "ruc": "20602140891",
+      "razonSocial": "SAVI GROUP SAC",
+      "hashes": [
+        "964befc97ed207a6b6284e3cee3e166cfc5c8743f9205586dea7cb8e45e25b1b"
+      ]
+    },
+    {
+      "ruc": "20611611260",
+      "razonSocial": "CONSTRUTEC J & Y S.A.C",
+      "hashes": [
+        "ea4e899cbf2311e153e74a2b1e73b0435d986adc601bb5fbb5d02483852556cd",
+        "0921776d4a2e75d5096f2d477f6b9a49103a45494799b8bbac5ccd217d298a3f"
+      ]
+    },
+    {
+      "ruc": "20569249903",
+      "razonSocial": "ARGOS SOLUCIONES B Y C SAC",
+      "hashes": [
+        "a0bb2e68dd2818c7759b9a26661a0b9f2fab418ace1ea3b038db887b9dcb2990"
+      ]
+    },
+    {
+      "ruc": "20111740438",
+      "razonSocial": "SONEPAR PERU SAC",
+      "hashes": [
+        "d728d2e8fcf962c8a037e82847f0ab7a34510c289f0b173e6f5f01a72bc84f96"
+      ]
+    },
+    {
+      "ruc": "20520571672",
+      "razonSocial": "FRIO IMPORTACIONES S.A.C.",
+      "hashes": [
+        "39753f54efbc09b3650b7eb30b2b496a0d716c4464d02737cd4ca90d3105c947"
+      ]
+    },
+    {
+      "ruc": "20546040331",
+      "razonSocial": "PROVEEDORES INDUSTRIALES SALAZAR S.A.C.",
+      "hashes": [
+        "5d5e4d707721d725f09f6f3a2d8759adb60f99b7158c5e7c80264350e13d219e"
+      ]
+    },
+    {
+      "ruc": "20553043515",
+      "razonSocial": "CORPORACION SERTECIN S.A.C.",
+      "hashes": [
+        "cd2a8222317fe079665427c00fa4acfdb16e86e885c7b640826e4a11fe389853"
+      ]
+    },
+    {
+      "ruc": "20609500523",
+      "razonSocial": "BANDEJAS PORTACABLES DEL PERU SAC",
+      "hashes": [
+        "f6d8617a0afec29bc3ecf303ec8de922b65f778d100afc824b5f3ed0ba294768"
+      ]
+    },
+    {
+      "ruc": "20507943340",
+      "razonSocial": "AB IMPORTACIONES INDUSTRIALES SAC",
+      "hashes": [
+        "854200aee42e3954a11d04fcea6d687833eb08ed7a70de431fe958f1283b06eb"
+      ]
+    },
+    {
+      "ruc": "20600487141",
+      "razonSocial": "AQA TOOLS SAC",
+      "hashes": [
+        "ac0bc42d25b6f51af5c445dfd7957f478d62e34d9b841c445f6e4209cdd1d4f2"
+      ]
+    },
+    {
+      "ruc": "20603880731",
+      "razonSocial": "Perfiles Metálicos Del Perú S.A.C",
+      "hashes": [
+        "8d7671bec66285e3303410a5ccbfa588db17756202011a082fab65ed21355d44"
+      ]
+    },
+    {
+      "ruc": "20538736776",
+      "razonSocial": "CENTRO DEL FRIO COMERCIAL EIRL",
+      "hashes": [
+        "b7a3e485bd2f6c786ee2b5d4e8322282b3188041bcb7c093c9128ff83cd250c1"
+      ]
+    },
+    {
+      "ruc": "20341257167",
+      "razonSocial": "GLOBALTEC SAC",
+      "hashes": [
+        "96a5c643c8c076b7ad64aeed8178ae2e27ec5d50769aca74bae2ca5484ddc7a1"
+      ]
+    },
+    {
+      "ruc": "20492055116",
+      "razonSocial": "DIAJO S.A.C.",
+      "hashes": [
+        "291e86e07809a87b5a9112c54c5de9821d284bac44ce8ea4f9c276e532b125b6"
+      ]
+    },
+    {
+      "ruc": "20611105046",
+      "razonSocial": "PERNOS RAMIREZ E.I.R.L.",
+      "hashes": [
+        "76242af2b49f9429f558f9258b4de949dc386faa15b5f7dcbd133bb17c19c617"
+      ]
+    },
+    {
+      "ruc": "20518718470",
+      "razonSocial": "REIRO SAC",
+      "hashes": [
+        "e0d367975fe5a5eaf140b1343f40ff65cfa08efc86673ca76a6e1a0a10b6c6b6"
+      ]
+    },
+    {
+      "ruc": "20510746539",
+      "razonSocial": "SARGATEX S.A.C.",
+      "hashes": [
+        "a8d546be3b5f28a6040eb65be42c55a2cee94ba1d4c154733ab2164242e88306"
+      ]
+    },
+    {
+      "ruc": "20255395328",
+      "razonSocial": "FMP INGENIEROS EIRL",
+      "hashes": [
+        "9f2b34bf6a5ecdddd7d23f1f484bb6e320891d51355a9f4a3f84c47c08bceb35"
+      ]
+    },
+    {
+      "ruc": "20254305066",
+      "razonSocial": "Sika Perú S.A.C",
+      "hashes": [
+        "3f08ea9dde7c4ece5debd09be6e77b5e20605c600c45dfc6bf1a7dac323773a2"
+      ]
+    },
+    {
+      "ruc": "20100276322",
+      "razonSocial": "EMPRESA METAL MECÁNICA S.A",
+      "hashes": [
+        "ea5c5f39015d3fc67006862ad488a83566d0c71dc5106bd61835d54e1bfd9908"
+      ]
+    },
+    {
+      "ruc": "20100019940",
+      "razonSocial": "CONSTRUCCIONES ELECTROMECANICAS DELCROSA S.A. O DELCROSA S.A.",
+      "hashes": [
+        "659bf26bcde91f76e1d86405bfcf1616a9da6d15881763890c958c8df7224d7f"
+      ]
+    },
+    {
+      "ruc": "20553902313",
+      "razonSocial": "DIPROSOL PERU S.A.C",
+      "hashes": [
+        "343f88308d2735518bceeb8256b050524d9ba3a7c75f3ef1219ef9355b000c04"
+      ]
+    },
+    {
+      "ruc": "20605046241",
+      "razonSocial": "KABELWIRE SAC",
+      "hashes": [
+        "72b3e5bbd513e1d9966ecc1389c9fa8063de09007a894873cb217c675219bd9e"
+      ]
+    },
+    {
+      "ruc": "20468095301",
+      "razonSocial": "Gramsa Distribuidora S.a.C",
+      "hashes": [
+        "9780ba4c50e1173027e175a3cf70a48f29a966d09ce5088d6894ceb19ab7872d"
+      ]
+    },
+    {
+      "ruc": "20141151968",
+      "razonSocial": "SYZ COMINSA S.R.L.",
+      "hashes": [
+        "b26c7c34b361ac1689fec6071de861fe359ec9825feaf6479a0b5fc310e98ba9"
+      ]
+    },
+    {
+      "ruc": "20100084172",
+      "razonSocial": "PROMOTORES ELECTRICOS S.A.",
+      "hashes": [
+        "cd90c2a749394644af9f09bcd6ac02f2ce9f8285755101e231bdb6a4bba625a7"
+      ]
+    },
+    {
+      "ruc": "20601956510",
+      "razonSocial": "CORPORACION XIAL SAC",
+      "hashes": [
+        "64a24b648f5f36da9a431cc450a8e7baf3715a73b802a0e4e548da83ec85dda5"
+      ]
+    },
+    {
+      "ruc": "20545135184",
+      "razonSocial": "WESCO ANIXTER PERU S.A.C.",
+      "hashes": [
+        "c2663a71cdcad22e4ccdb0313ce666127a0010eae2f4d26222e05d8a6011bf96"
+      ]
+    },
+    {
+      "ruc": "20602124895",
+      "razonSocial": "GLOBAL SERVICE & SUPPLIERS SAC",
+      "hashes": [
+        "47840aee8e6314f74e930ba5cec329853737ceaf7af2623ac8e5cf93aa4032f9"
+      ]
+    },
+    {
+      "ruc": "20101461786",
+      "razonSocial": "MOTOREX S A",
+      "hashes": [
+        "4e07dda89c5a58518080cf5431d3825d39505175dc14bb96abe6974d45b1c157"
+      ]
+    },
+    {
+      "ruc": "20301821388",
+      "razonSocial": "TUBISA SAC",
+      "hashes": [
+        "e950c08c5c89e484fe0f6babc06393e9724467efd886ad788585bf90712719bb"
+      ]
+    }
+  ]
+}
