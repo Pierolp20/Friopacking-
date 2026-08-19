@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grupo Friopacking · Sistema de Citas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* Paleta alineada al Manual del León: navy profundo + verde menta */
+    --navy-950:#0a1440;
+    --navy-900:#0e1b52;
+    --navy-800:#152668;
+    --navy-700:#1c3384;
+    --teal-500:#2fd7a0;
+    --teal-400:#6fe6c0;
+    --teal-600:#22a87e;
+    --ice-100:#eef4fb;
+    --ice-50:#f7fafd;
+    --frost:#d9ecf5;
+    --line:#d7e2ee;
+    --slate-700:#26324a;
+    --slate-500:#5b6c85;
+    --slate-400:#8695ab;
+    --amber:#b5762f;
+    --amber-bg:#fbf0e2;
+    --red:#c0483f;
+    --red-bg:#fbe9e7;
+    --green:#22a87e;
+    --green-bg:#e4f8f0;
+    --radius:10px;
+    --shadow: 0 1px 2px rgba(10,20,64,.05), 0 8px 22px rgba(10,20,64,.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ice-100);
+    color:var(--slate-700);
+    font-family:'Inter',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+    background-image:
+      radial-gradient(circle at 100% 0%, rgba(47,215,160,.10), transparent 45%),
+      radial-gradient(circle at 0% 100%, rgba(28,51,132,.08), transparent 40%);
+    background-attachment:fixed;
+  }
+  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif;letter-spacing:-0.01em;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ---------- Header ---------- */
+  header.app-header{
+    background:linear-gradient(160deg,var(--navy-950),var(--navy-900) 70%);
+    color:#eaf3fb;
+    padding:20px clamp(16px,4vw,48px);
+    position:sticky; top:0; z-index:40;
+    box-shadow:0 6px 24px rgba(10,20,64,.28);
+  }
+  .header-row{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand-mark{height:40px;width:auto;flex-shrink:0;display:block;filter:brightness(0) invert(1) drop-shadow(0 1px 6px rgba(0,0,0,.35));}
+  .brand-divider{width:1px;align-self:stretch;background:rgba(255,255,255,.16);flex-shrink:0;}
+  .brand-text .eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal-400);margin:0 0 2px;}
+  .brand-text h1{font-size:20px;margin:0;font-weight:700;color:#fff;}
+  .brand-text .sub{font-size:12px;color:#9db3ce;margin-top:2px;}
+
+  nav.tabs{display:flex;gap:6px;background:rgba(255,255,255,.06);padding:5px;border-radius:12px;flex-wrap:wrap;}
+  nav.tabs button{
+    appearance:none;border:0;background:transparent;color:#cfdcec;
+    padding:9px 15px;border-radius:8px;font-size:13px;font-weight:600;
+    cursor:pointer;transition:background .18s ease, color .18s ease;font-family:inherit;
+    display:flex;align-items:center;gap:6px;
+  }
+  nav.tabs button.active{background:#eaf3fb;color:var(--navy-950);}
+  nav.tabs button:not(.active):hover{background:rgba(255,255,255,.1);}
+  nav.tabs button .lock-ico{opacity:.8;}
+  nav.tabs button.active .lock-ico{opacity:.55;}
+
+  .gauge-wrap{margin-top:16px;}
+  .gauge-label{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:#9db3ce;margin-bottom:6px;}
+  .gauge-label strong{color:#fff;font-size:13px;}
+  .gauge-track{position:relative;height:10px;border-radius:6px;background:rgba(255,255,255,.12);overflow:visible;}
+  .gauge-zone{position:absolute;top:0;bottom:0;background:rgba(47,215,160,.45);border-radius:6px;}
+  .gauge-now{position:absolute;top:-4px;width:3px;height:18px;border-radius:2px;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.18);transition:left .3s ease;}
+  .status-pill{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;font-weight:600;padding:4px 10px;border-radius:100px;}
+  .status-pill.open{background:rgba(47,215,160,.2);color:#8ff0cf;}
+  .status-pill.closed{background:rgba(181,118,47,.22);color:#f0c090;}
+  .status-pill .dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+
+  main{max-width:1180px;margin:0 auto;padding:28px clamp(16px,4vw,48px) 80px;}
+  .section-intro{margin-bottom:22px;}
+  .section-intro h2{font-size:23px;margin:0 0 6px;color:var(--navy-950);}
+  .section-intro p{margin:0;color:var(--slate-500);font-size:14.5px;max-width:680px;}
+
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:20px 0 26px;}
+  .stat-card{background:var(--ice-50);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);}
+  .stat-card .num{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;color:var(--navy-800);}
+  .stat-card .lbl{font-size:12px;color:var(--slate-500);margin-top:2px;}
+
+  .grid-2{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:start;}
+  @media (max-width:920px){.grid-2{grid-template-columns:1fr;}}
+
+  .card{background:var(--ice-50);border:1px solid var(--line);border-radius:14px;padding:22px clamp(16px,3vw,26px);box-shadow:var(--shadow);}
+  .card h3{font-size:15px;margin:0 0 4px;color:var(--navy-800);}
+  .card .card-hint{font-size:12.5px;color:var(--slate-500);margin:0 0 16px;}
+
+  fieldset{border:0;padding:0;margin:0 0 18px;}
+  legend{font-size:12.5px;font-weight:700;color:var(--teal-600);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;padding:0;}
+  .field{margin-bottom:13px;}
+  .field label{display:block;font-size:13px;font-weight:600;color:var(--slate-700);margin-bottom:5px;}
+  .field .req{color:var(--amber);}
+  .field .hint{display:block;font-size:11.5px;color:var(--slate-400);font-weight:400;margin-top:3px;}
+  input[type=text],input[type=number],input[type=date],input[type=password],select,textarea{
+    width:100%;padding:9px 11px;border:1.5px solid var(--line);border-radius:8px;
+    font-size:13.5px;font-family:inherit;color:var(--slate-700);background:#fff;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  input[type=file]{
+    width:100%;padding:8px;border:1.5px dashed var(--line);border-radius:8px;
+    font-size:12.5px;font-family:inherit;background:#fff;color:var(--slate-500);
+  }
+  input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{
+    outline:none;border-color:var(--teal-600);box-shadow:0 0 0 3px rgba(34,168,126,.18);
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+  @media (max-width:520px){.row2,.row3{grid-template-columns:1fr;}}
+
+  .radio-group{display:flex;gap:10px;flex-wrap:wrap;}
+  .radio-chip{display:flex;align-items:center;gap:7px;border:1.5px solid var(--line);padding:8px 13px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--slate-700);background:#fff;transition:.15s ease;}
+  .radio-chip input{margin:0;accent-color:var(--teal-600);}
+  .radio-chip.checked{border-color:var(--teal-600);background:var(--green-bg);color:var(--navy-800);}
+
+  .hour-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;}
+  .hour-chip{border:1.5px solid var(--line);padding:9px 8px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;text-align:center;color:var(--slate-700);background:#fff;transition:.15s ease;}
+  .hour-chip.checked{border-color:var(--teal-600);background:var(--green-bg);color:var(--navy-800);}
+  .hour-chip input{display:none;}
+
+  .repeater-item{border:1.5px dashed var(--line);border-radius:10px;padding:14px;margin-bottom:10px;position:relative;background:#fbfdfe;}
+  .repeater-item .remove-btn{position:absolute;top:8px;right:8px;background:none;border:0;color:var(--slate-400);cursor:pointer;font-size:16px;line-height:1;padding:4px;}
+  .repeater-item .remove-btn:hover{color:var(--red);}
+  .add-btn{display:inline-flex;align-items:center;gap:6px;background:var(--ice-100);border:1.5px dashed var(--teal-600);color:var(--teal-600);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer;transition:.15s ease;font-family:inherit;}
+  .add-btn:hover{background:var(--frost);}
+
+  .btn-primary{appearance:none;border:0;background:linear-gradient(135deg,var(--teal-600),var(--navy-800));color:#fff;font-weight:700;font-size:14px;padding:12px 22px;border-radius:9px;cursor:pointer;width:100%;margin-top:6px;font-family:inherit;box-shadow:0 6px 16px rgba(21,38,104,.25);transition:transform .12s ease, box-shadow .12s ease;}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(21,38,104,.32);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-secondary{appearance:none;border:1.5px solid var(--line);background:#fff;color:var(--navy-800);font-weight:600;font-size:13px;padding:9px 16px;border-radius:8px;cursor:pointer;font-family:inherit;}
+  .btn-secondary:hover{border-color:var(--teal-600);}
+
+  .helper-error{color:var(--amber);font-size:12px;margin-top:5px;display:none;}
+  .field.invalid input,.field.invalid select{border-color:var(--amber);background:var(--amber-bg);}
+  .field.invalid .helper-error{display:block;}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--navy-950);color:#eaf3fb;padding:12px 20px;border-radius:10px;font-size:13.5px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:.28s ease;z-index:100;display:flex;align-items:center;gap:8px;max-width:90vw;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast .dot{width:8px;height:8px;border-radius:50%;background:var(--teal-500);flex-shrink:0;}
+
+  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;text-transform:uppercase;letter-spacing:.03em;white-space:nowrap;}
+  .badge.peatonal{background:var(--ice-100);color:var(--navy-700);}
+  .badge.vehicular{background:var(--frost);color:var(--navy-800);}
+  .badge.interno{background:var(--green-bg);color:var(--green);}
+  .badge.externo{background:var(--amber-bg);color:var(--amber);}
+  .badge.pendiente{background:var(--ice-100);color:var(--slate-500);}
+  .badge.aprobado{background:var(--green-bg);color:var(--green);}
+  .badge.rechazado{background:var(--red-bg);color:var(--red);}
+  .badge.atiempo{background:var(--green-bg);color:var(--green);}
+  .badge.no_llego{background:var(--red-bg);color:var(--red);}
+  .badge.fuera_tiempo{background:var(--amber-bg);color:var(--amber);}
+  .badge.folio{background:var(--navy-950);color:#eaf3fb;font-family:'JetBrains Mono',monospace;letter-spacing:0;}
+
+  .entry{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:10px;background:#fff;}
+  .entry-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:8px;flex-wrap:wrap;}
+  .entry-top .name{font-weight:700;color:var(--navy-800);font-size:14px;}
+  .entry-top .time{font-size:12px;color:var(--slate-500);font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+  .entry-meta{font-size:12.5px;color:var(--slate-500);line-height:1.7;}
+  .entry-meta b{color:var(--slate-700);}
+  .entry-meta .tag-row{margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+  .doc-links{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .doc-link{font-size:11.5px;font-weight:600;color:var(--navy-800);background:var(--ice-100);border:1px solid var(--line);padding:4px 9px;border-radius:100px;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+  .doc-link:hover{background:var(--frost);}
+  .doc-link.missing{color:var(--slate-400);background:transparent;border-style:dashed;}
+  .empty-state{text-align:center;padding:34px 16px;color:var(--slate-400);font-size:13.5px;}
+  .empty-state svg{margin-bottom:10px;opacity:.5;}
+
+  .checklist-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+  .cl-btn{border:1.5px solid var(--line);background:#fff;padding:6px 12px;border-radius:100px;font-size:11.5px;font-weight:700;cursor:pointer;color:var(--slate-500);font-family:inherit;}
+  .cl-btn.on-atiempo.active{background:var(--green-bg);border-color:var(--green);color:var(--green);}
+  .cl-btn.on-no_llego.active{background:var(--red-bg);border-color:var(--red);color:var(--red);}
+  .cl-btn.on-fuera_tiempo.active{background:var(--amber-bg);border-color:var(--amber);color:var(--amber);}
+
+  .verify-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin:10px 0;}
+  .verify-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--slate-700);border:1px solid var(--line);padding:8px 10px;border-radius:8px;background:#fff;}
+  .verify-item input{accent-color:var(--teal-600);}
+
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+  .cal-head .month-label{font-weight:700;color:var(--navy-800);font-size:15px;}
+  .cal-nav-btn{background:var(--ice-100);border:1px solid var(--line);border-radius:7px;width:30px;height:30px;cursor:pointer;color:var(--teal-600);font-size:14px;display:flex;align-items:center;justify-content:center;font-family:inherit;}
+  .cal-nav-btn:hover{background:var(--frost);}
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cal-dow{text-align:center;font-size:10.5px;color:var(--slate-400);font-weight:700;text-transform:uppercase;padding-bottom:4px;}
+  .cal-day{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:12.5px;cursor:pointer;color:var(--slate-700);position:relative;border:1.5px solid transparent;transition:.12s ease;}
+  .cal-day:hover{background:var(--ice-100);}
+  .cal-day.muted{opacity:.35;pointer-events:none;}
+  .cal-day.today{border-color:var(--teal-500);font-weight:700;}
+  .cal-day.selected{background:var(--navy-800);color:#fff;}
+  .cal-day .dot-count{position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;background:var(--amber);}
+  .cal-day.selected .dot-count{background:#fff;}
+
+  .divider{height:1px;background:var(--line);margin:18px 0;}
+  .inner-tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--line);padding-bottom:0;}
+  .inner-tabs button{appearance:none;border:0;background:transparent;color:var(--slate-500);padding:9px 4px;margin-right:14px;font-size:13.5px;font-weight:600;cursor:pointer;font-family:inherit;border-bottom:2px solid transparent;}
+  .inner-tabs button.active{color:var(--navy-800);border-bottom-color:var(--teal-600);}
+
+  footer{text-align:center;padding:26px;font-size:11.5px;color:var(--slate-400);}
+
+  /* Lock gate */
+  .lock-gate{max-width:420px;margin:40px auto;text-align:center;}
+  .lock-gate .lock-icon{width:52px;height:52px;margin:0 auto 16px;color:var(--navy-800);}
+  .lock-gate h3{margin:0 0 6px;color:var(--navy-950);font-size:19px;}
+  .lock-gate p{color:var(--slate-500);font-size:13.5px;margin:0 0 20px;}
+  .lock-gate .field{text-align:left;}
+  .gate-error{color:var(--red);font-size:12.5px;margin-top:8px;display:none;}
+
+  .role-note{background:var(--frost);border:1px solid var(--teal-400);color:var(--navy-800);font-size:12px;border-radius:8px;padding:10px 12px;margin-bottom:18px;line-height:1.5;}
+
+  .folio-confirm{margin-top:18px;padding:16px 18px;border:1.5px solid var(--teal-400);background:var(--green-bg);border-radius:12px;}
+  .folio-confirm-title{margin:0 0 10px;font-size:13.5px;font-weight:700;color:var(--navy-800);}
+  .folio-box{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fff;border:1.5px solid var(--teal-500);border-radius:8px;padding:10px 12px;flex-wrap:wrap;}
+  .folio-box .mono{font-size:15px;font-weight:700;color:var(--navy-950);letter-spacing:.02em;}
+  .btn-copy{appearance:none;border:1.5px solid var(--teal-600);background:#fff;color:var(--teal-600);font-weight:700;font-size:12.5px;padding:7px 13px;border-radius:7px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:.15s ease;}
+  .btn-copy:hover{background:var(--teal-600);color:#fff;}
+  .btn-copy.copied{background:var(--teal-600);color:#fff;}
+  .folio-confirm-hint{font-size:12px;color:var(--slate-500);margin:10px 0 12px;}
+  .visto-yes{color:var(--green);font-weight:700;}
+  .visto-no{color:var(--amber);font-weight:700;}
+  .observaciones-box{background:#fff;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:12.5px;color:var(--slate-700);}
+  .observaciones-box.none{color:var(--slate-400);font-style:italic;}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;}}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="header-row">
+    <div class="brand">
+      <img class="brand-mark" src="https://cdn.prod.website-files.com/680993da51b017d5afeb2060/680993da51b017d5afeb24b9_LOGO%20FP%20FOOTER.png" alt="Grupo Friopacking">
+      <div class="brand-divider" aria-hidden="true"></div>
+      <div class="brand-text">
+        <p class="eyebrow">Sistema corporativo</p>
+        <h1>Sistema de Citas</h1>
+        <p class="sub">Recepción de proveedores, almacén y SSOMA</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Roles">
+      <button class="active" data-tab="proveedor" role="tab" aria-selected="true">Proveedores</button>
+      <button data-tab="almacen" role="tab" aria-selected="false"><span class="lock-ico" id="lockIcoAlmacen">🔒</span> Almacén</button>
+      <button data-tab="ssoma" role="tab" aria-selected="false"><span class="lock-ico" id="lockIcoSsoma">🔒</span> SSOMA</button>
+    </nav>
+  </div>
+
+  <div class="gauge-wrap" id="gaugeWrap">
+    <div class="gauge-label">
+      <span>Ventana de atención de recepción</span>
+      <strong id="gaugeClock">--:--</strong>
+    </div>
+    <div class="gauge-track">
+      <div class="gauge-zone" id="gaugeZone"></div>
+      <div class="gauge-now" id="gaugeNow"></div>
+    </div>
+    <span class="status-pill" id="statusPill"><span class="dot"></span><span id="statusText">Calculando…</span></span>
+  </div>
+</header>
+
+<main>
+
+  <!-- ================= ROL 1: PROVEEDOR ================= -->
+  <section id="panel-proveedor">
+    <div id="proveedor-gate"></div>
+    <div id="proveedor-content" style="display:none;">
+    <div class="section-intro">
+      <h2>Citas de recepción de proveedores externos</h2>
+      <p>Registra tu ingreso a planta: datos del proveedor, chofer y personal, documentos, vehículo y productos a entregar. Horario de atención: <strong>8:00 a. m. – 1:00 p. m.</strong></p>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;">
+        <span class="badge aprobado" id="provNombreActivo"></span>
+        <button type="button" class="btn-secondary" id="btnCambiarProveedor" style="width:auto;">Cambiar de proveedor</button>
+      </div>
+    </div>
+
+    <div class="inner-tabs">
+      <button class="active" data-inner="prov-nueva">Nueva cita</button>
+      <button data-inner="prov-consulta">Consultar mi cita</button>
+    </div>
+
+    <div id="prov-nueva-panel">
+      <div class="card">
+        <h3>Nueva cita de recepción</h3>
+        <p class="card-hint">Completa los datos y adjunta los documentos. Recibirás un folio para hacer seguimiento a tu cita.</p>
+        <form id="formRecepcion" novalidate>
+
+          <fieldset>
+            <legend>Datos del proveedor</legend>
+            <div class="row2">
+              <div class="field">
+                <label for="razonSocial">Razón social <span class="req">*</span></label>
+                <input type="text" id="razonSocial" placeholder="Ej. Distribuidora Andina S.A.C.">
+                <p class="helper-error">Ingresa la razón social del proveedor.</p>
+              </div>
+              <div class="field">
+                <label for="ordenCompra">N.º de orden de compra <span class="req">*</span></label>
+                <input type="text" id="ordenCompra" placeholder="Ej. OC-2026-00123">
+                <p class="helper-error">Ingresa el número de orden de compra.</p>
+              </div>
+            </div>
+            <div class="field">
+              <label for="fechaRecepcion">Fecha de la cita <span class="req">*</span></label>
+              <input type="date" id="fechaRecepcion">
+              <p class="helper-error">Selecciona una fecha.</p>
+            </div>
+            <div class="field">
+              <label>Horario de atención <span class="req">*</span> <span class="hint">Bloques de 30 minutos, dentro de 8:30 a. m. – 12:30 p. m.</span></label>
+              <div class="hour-grid" id="hourGrid">
+                <label class="hour-chip"><input type="radio" name="bloqueHorario" value="08:30–09:00">08:30–09:00</label>
+                <label class="hour-chip"><input type="radio" name="bloqueHorario" value="09:00–09:30">09:00–09:30</label>
+                <label class="hour-chip"><input type="radio" name="bloqueHorario" value="09:30–10:00">09:30–10:00</label>
+                <label class="hour-chip"><input type="radio" name="bloqueHorario" value="10:00–10:30">10:00–10:30</label>
+                <label class="hour-chip"><input type="radio" name="bloqueHorario" value="10:30–11:00">10:30–11:00</label>
+                <label class="hour-chip"><input type="radio" name="bloqueHorario" value="11:00–11:30">11:00–11:30</label>
+                <label class="hour-chip"><input type="radio" name="bloqueHorario" value="11:30–12:00">11:30–12:00</label>
+                <label class="hour-chip"><input type="radio" name="bloqueHorario" value="12:00–12:30">12:00–12:30</label>
+              </div>
+              <p class="helper-error" id="errHorario">Selecciona un bloque de horario.</p>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Chofer y personal que ingresará</legend>
+            <div class="row2">
+              <div class="field">
+                <label for="choferNombre">Nombre completo del chofer <span class="req">*</span></label>
+                <input type="text" id="choferNombre" placeholder="Nombres y apellidos">
+                <p class="helper-error">Ingresa el nombre del chofer.</p>
+              </div>
+              <div class="field">
+                <label for="choferBrevete">N.º de brevete (chofer) <span class="req">*</span></label>
+                <input type="text" id="choferBrevete" placeholder="N.º de licencia de conducir">
+                <p class="helper-error">Ingresa el número de brevete del chofer.</p>
+              </div>
+            </div>
+            <div class="field">
+              <label for="numPersonasExtra">¿Cuántas personas más ingresarán? <span class="hint">Además del chofer</span></label>
+              <input type="number" id="numPersonasExtra" min="0" max="10" value="0">
+            </div>
+            <div id="personasExtraList"></div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Documentos a adjuntar</legend>
+            <p class="card-hint" style="margin-top:-6px;">Sube tus archivos a Google Drive, comparte el acceso ("Cualquiera con el enlace") y pega aquí el link. Si tienes varios archivos, puedes pegar el link de una carpeta o varios links separados por coma.</p>
+            <div class="row2">
+              <div class="field">
+                <label for="docSctr">SCTR de las personas que ingresarán <span class="req">*</span> <span class="hint">Link de Drive</span></label>
+                <input type="text" id="docSctr" placeholder="https://drive.google.com/...">
+                <p class="helper-error">Pega el link de Drive del SCTR.</p>
+              </div>
+              <div class="field">
+                <label for="docDni">DNI de las personas que ingresarán <span class="req">*</span> <span class="hint">Link de Drive</span></label>
+                <input type="text" id="docDni" placeholder="https://drive.google.com/...">
+                <p class="helper-error">Pega el link de Drive del/los DNI.</p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Tipo de ingreso</legend>
+            <div class="radio-group" id="tipoIngresoGroup">
+              <label class="radio-chip"><input type="radio" name="tipoIngreso" value="Peatonal" checked> Peatonal</label>
+              <label class="radio-chip"><input type="radio" name="tipoIngreso" value="Vehicular"> Vehicular</label>
+            </div>
+          </fieldset>
+
+          <fieldset id="vehiculoFieldset" style="display:none;">
+            <legend>Datos y documentos del vehículo</legend>
+            <div class="row2">
+              <div class="field">
+                <label for="vehTipo">Tipo de vehículo</label>
+                <input type="text" id="vehTipo" placeholder="Camión, furgón…">
+              </div>
+              <div class="field">
+                <label for="vehPlaca">Placa</label>
+                <input type="text" id="vehPlaca" placeholder="ABC-123">
+                <p class="helper-error">Ingresa la placa del vehículo.</p>
+              </div>
+            </div>
+            <div class="row3">
+              <div class="field">
+                <label for="docSoat">Adjuntar SOAT <span class="req">*</span> <span class="hint">Link de Drive</span></label>
+                <input type="text" id="docSoat" placeholder="https://drive.google.com/...">
+                <p class="helper-error">Pega el link de Drive del SOAT.</p>
+              </div>
+              <div class="field">
+                <label for="docBrevete">Adjuntar brevete <span class="req">*</span> <span class="hint">Link de Drive</span></label>
+                <input type="text" id="docBrevete" placeholder="https://drive.google.com/...">
+                <p class="helper-error">Pega el link de Drive del brevete.</p>
+              </div>
+              <div class="field">
+                <label for="docRevTec">Adjuntar revisión técnica <span class="req">*</span> <span class="hint">Link de Drive</span></label>
+                <input type="text" id="docRevTec" placeholder="https://drive.google.com/...">
+                <p class="helper-error">Pega el link de Drive de la revisión técnica.</p>
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Productos a entregar</legend>
+            <div id="productosList"></div>
+            <button type="button" class="add-btn" id="addProducto">+ Agregar producto</button>
+          </fieldset>
+
+          <button type="submit" class="btn-primary">Registrar cita de recepción</button>
+        </form>
+
+        <div id="folioConfirmCard" class="folio-confirm" style="display:none;">
+          <p class="folio-confirm-title">✅ Cita registrada. Este es tu folio de seguimiento:</p>
+          <div class="folio-box">
+            <span class="mono" id="folioConfirmText">FP-00000000-000</span>
+            <button type="button" class="btn-copy" id="btnCopiarFolio">Copiar folio</button>
+          </div>
+          <p class="folio-confirm-hint">Guarda este folio: te permitirá consultar si SSOMA ya revisó tu documentación y si hay alguna observación.</p>
+          <button type="button" class="btn-secondary" id="btnIrAConsultar">Ir a consultar mi cita →</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="prov-consulta-panel" style="display:none;">
+      <div class="card">
+        <h3>Consultar mi cita</h3>
+        <p class="card-hint">Ingresa el folio que recibiste al registrar tu cita para ver su estado.</p>
+        <div class="row2">
+          <div class="field">
+            <label for="consultaFolio">Folio</label>
+            <input type="text" id="consultaFolio" placeholder="Ej. FP-20260718-001">
+          </div>
+          <div class="field" style="display:flex;align-items:flex-end;">
+            <button type="button" class="btn-secondary" id="btnConsultar" style="width:100%;">Buscar</button>
+          </div>
+        </div>
+        <div id="consultaResultado"></div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- ================= ROL 2: ALMACÉN ================= -->
+  <section id="panel-almacen" style="display:none;">
+    <div id="almacen-gate"></div>
+    <div id="almacen-content" style="display:none;">
+      <div class="section-intro">
+        <h2>Panel de almacén</h2>
+        <p>Revisa las citas de recepción solicitadas y gestiona el calendario de despachos con transporte interno y externo.</p>
+      </div>
+      <div class="inner-tabs">
+        <button class="active" data-inner="alm-recepciones">Citas de recepción</button>
+        <button data-inner="alm-despacho">Despacho de transporte</button>
+      </div>
+
+      <div id="alm-recepciones-panel">
+        <div class="stat-row" id="statsAlmacen"></div>
+        <div class="card">
+          <h3>Citas solicitadas por proveedores</h3>
+          <p class="card-hint">Marca si el proveedor llegó a tiempo, no llegó, o llegó fuera de tiempo.</p>
+          <div id="listaAlmacenRecepciones"></div>
+        </div>
+
+        <div class="card">
+          <h3>Accesos de proveedores (Citas)</h3>
+          <p class="card-hint">Habilita a un proveedor para que pueda ingresar al formulario de citas con su RUC y el correo de su asesor comercial. El correo nunca se guarda en texto plano en el archivo compartido — solo un identificador cifrado.</p>
+          <form id="formHabilitarProveedor" novalidate>
+            <div class="row3">
+              <div class="field"><label for="habRuc">RUC</label><input type="text" id="habRuc" placeholder="20602140891"></div>
+              <div class="field"><label for="habRazonSocial">Razón social</label><input type="text" id="habRazonSocial" placeholder="Ej. SAVI GROUP SAC"></div>
+              <div class="field"><label for="habCorreo">Correo(s) del asesor comercial</label><input type="text" id="habCorreo" placeholder="correo@empresa.com"></div>
+            </div>
+            <button type="submit" class="btn-secondary" style="width:auto;">+ Habilitar proveedor</button>
+          </form>
+          <div id="listaProveedoresAutorizados" style="margin-top:14px;"></div>
+        </div>
+      </div>
+
+      <div id="alm-despacho-panel" style="display:none;">
+        <div class="stat-row" id="statsDespacho"></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Calendario de despachos</h3>
+            <p class="card-hint">Selecciona una fecha para programar o revisar despachos.</p>
+            <div class="cal-head">
+              <button class="cal-nav-btn" id="calPrev">‹</button>
+              <span class="month-label" id="calMonthLabel"></span>
+              <button class="cal-nav-btn" id="calNext">›</button>
+            </div>
+            <div class="cal-grid" id="calDow"></div>
+            <div class="cal-grid" id="calGrid" style="margin-top:4px;"></div>
+            <div class="divider"></div>
+            <h3 style="margin-bottom:10px;">Despachos del <span id="selectedDateLabel">día</span></h3>
+            <div id="listaDespachoDia"></div>
+          </div>
+          <div class="card">
+            <h3>Nueva cita de despacho</h3>
+            <p class="card-hint">Fecha seleccionada: <strong id="formFechaLabel">—</strong></p>
+            <form id="formDespacho" novalidate>
+              <div class="field">
+                <label for="proyectoDestino">Proyecto de destino <span class="req">*</span></label>
+                <input type="text" id="proyectoDestino" placeholder="Ej. Planta Chincha – Ampliación">
+                <p class="helper-error">Ingresa el proyecto de destino.</p>
+              </div>
+              <div class="field">
+                <label for="horaDespacho">Hora de despacho <span class="req">*</span></label>
+                <input type="text" id="horaDespacho" placeholder="Ej. 14:30">
+                <p class="helper-error">Ingresa una hora de despacho.</p>
+              </div>
+              <fieldset>
+                <legend>Tipo de transporte</legend>
+                <div class="radio-group" id="tipoTransporteGroup">
+                  <label class="radio-chip"><input type="radio" name="tipoTransporte" value="Interno" checked> Interno (Friopacking S.A.C.)</label>
+                  <label class="radio-chip"><input type="radio" name="tipoTransporte" value="Externo"> Externo</label>
+                </div>
+              </fieldset>
+              <div class="field" id="empresaTransporteField" style="display:none;">
+                <label for="empresaTransporte">Empresa transportista</label>
+                <input type="text" id="empresaTransporte" placeholder="Ej. Transportes del Sur E.I.R.L.">
+              </div>
+              <div class="row2">
+                <div class="field">
+                  <label for="transportistaNombre">Nombre del transportista <span class="req">*</span></label>
+                  <input type="text" id="transportistaNombre" placeholder="Nombres y apellidos">
+                  <p class="helper-error">Ingresa el nombre del transportista.</p>
+                </div>
+                <div class="field">
+                  <label for="transportistaDni">DNI / licencia</label>
+                  <input type="text" id="transportistaDni" placeholder="N.º de documento">
+                </div>
+              </div>
+              <div class="field">
+                <label for="numeroGuia">Número de guía <span class="req">*</span></label>
+                <input type="text" id="numeroGuia" placeholder="Ej. T001-000123">
+                <p class="helper-error">Ingresa el número de guía de remisión.</p>
+              </div>
+              <button type="submit" class="btn-primary">Programar despacho</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= ROL 3: SSOMA ================= -->
+  <section id="panel-ssoma" style="display:none;">
+    <div id="ssoma-gate"></div>
+    <div id="ssoma-content" style="display:none;">
+      <div class="section-intro">
+        <h2>Panel SSOMA — verificación documentaria</h2>
+        <p>Revisa la documentación de cada proveedor con cita de recepción y aprueba o rechaza el ingreso.</p>
+      </div>
+      <div class="stat-row" id="statsSsoma"></div>
+      <div class="card">
+        <h3>Citas pendientes de verificación</h3>
+        <p class="card-hint">Verifica los documentos y el EPP en sitio antes de aprobar el ingreso.</p>
+        <div id="listaSsoma"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>Grupo Friopacking · Sistema interno de citas — los datos y archivos se conservan solo durante esta sesión del navegador.</footer>
+<div class="toast" id="toast"><span class="dot"></span><span id="toastMsg"></span></div>
+
+<script>
+/* ============================================================
+   Estado en memoria + persistencia compartida vía GitHub.
+   Nota: las contraseñas de Almacén/SSOMA son una protección básica
+   del lado del cliente, útil para separar roles en este prototipo.
+   Para un entorno productivo se recomienda autenticación real en
+   un backend.
+   ============================================================ */
+const PASSWORDS = { almacen: 'fp.2026', ssoma: 'ssomafp.2026' };
+
+const state = {
+  recepciones: [],
+  despachos: [],
+  proveedoresAutorizados: [], // [{ruc, razonSocial, hashes:[sha256(ruc|correoAsesor)]}] — nunca correos en texto plano
+  calMonth: new Date().getMonth(),
+  calYear: new Date().getFullYear(),
+  selectedDate: todayISO(),
+  unlocked: { almacen:false, ssoma:false },
+  folioCounter: 1
+};
+let currentProveedor = null; // {ruc, razonSocial} — proveedor logueado en el panel de Proveedores
+
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function normalizar(s){ return String(s||'').trim().toLowerCase(); }
+async function sha256(text){
+  const enc = new TextEncoder().encode(text);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function showToast(msg){
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._h);
+  showToast._h = setTimeout(()=>t.classList.remove('show'), 2800);
+}
+function nextFolio(){
+  const d = new Date();
+  const ymd = d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  const n = String(state.folioCounter++).padStart(3,'0');
+  return `FP-${ymd}-${n}`;
+}
+function docLink(link, label){
+  const list = String(link||'').split(/[,;\n]+/).map(s=>s.trim()).filter(Boolean);
+  if(list.length===0) return `<span class="doc-link missing">${esc(label)}: no adjuntado</span>`;
+  return list.map((url,i)=>`<a class="doc-link" href="${esc(url)}" target="_blank" rel="noopener">📎 ${esc(label)}${list.length>1?` (${i+1})`:''}</a>`).join('');
+}
+
+/* ============================================================
+   STORAGE — mismo patrón que Facturas/Compras: un archivo JSON
+   propio en el repo de GitHub que usa la plataforma, con token de
+   escritura guardado solo en el navegador de quien lo ingresa.
+   TODO: actualizar GH_REPO_CITAS cuando el repo de Piero esté listo.
+   ============================================================ */
+const GH_REPO_CITAS = 'Melissa2026714/dashboard-friopacking';
+const GH_FILE_CITAS = 'citas_data.json';
+const GH_RAW_CITAS = 'https://raw.githubusercontent.com/'+GH_REPO_CITAS+'/main/'+GH_FILE_CITAS;
+const GH_API_CITAS = 'https://api.github.com/repos/'+GH_REPO_CITAS+'/contents/'+GH_FILE_CITAS;
+const GH_TOKEN_KEY_CITAS = 'fp_gh_token_citas';
+
+function getGHTokenCitas(){
+  const raw = localStorage.getItem(GH_TOKEN_KEY_CITAS) || '';
+  const clean = raw.replace(/\s+/g,'');
+  if(clean !== raw) localStorage.setItem(GH_TOKEN_KEY_CITAS, clean);
+  return clean;
+}
+function setupGHTokenCitas(){
+  const cur = localStorage.getItem(GH_TOKEN_KEY_CITAS) || '';
+  const t = prompt('Ingresa el Token de GitHub de Citas\n(propio de este módulo — se guarda solo en este navegador):', cur);
+  if(t !== null){
+    const clean = t.replace(/\s+/g,'');
+    localStorage.setItem(GH_TOKEN_KEY_CITAS, clean);
+    alert(clean ? '✅ Token guardado. Ya puedes registrar y guardar citas.' : '⚠ Token eliminado.');
+  }
+}
+function fetchTO(url, opts, ms){
+  const ms_ = ms || 45000;
+  return Promise.race([
+    fetch(url, opts),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('tiempo de espera agotado ('+Math.round(ms_/1000)+' s) — revisa tu conexión e intenta de nuevo')), ms_))
+  ]);
+}
+async function loadCitasRemote(){
+  try{
+    const res = await fetchTO(GH_RAW_CITAS + '?t=' + Date.now());
+    if(!res.ok) return null; // archivo aún no existe en el repo
+    return await res.json();
+  }catch(e){
+    console.error('No se pudo leer citas_data.json', e);
+    return null;
+  }
+}
+async function saveCitasSection(sectionKey, sectionValue){
+  const token = getGHTokenCitas();
+  if(!token){
+    if(confirm('Para guardar (compartido con almacén, SSOMA y proveedores) necesitas un Token de GitHub.\n¿Configurarlo ahora?')) setupGHTokenCitas();
+    throw new Error('Falta configurar el Token de GitHub de Citas.');
+  }
+  const check = await fetchTO(GH_API_CITAS, {headers:{Authorization:'token '+token, Accept:'application/vnd.github.v3+json'}});
+  let sha = '';
+  let remote = {};
+  if(check.ok){
+    const meta = await check.json();
+    sha = meta.sha || '';
+    const remoteRaw = await fetchTO(GH_RAW_CITAS + '?t=' + Date.now());
+    if(remoteRaw.ok) remote = await remoteRaw.json();
+  }
+  remote[sectionKey] = sectionValue;
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(remote))));
+  const body = {message:'citas: actualizar '+sectionKey+' '+new Date().toISOString(), content};
+  if(sha) body.sha = sha;
+  const res = await fetchTO(GH_API_CITAS, {method:'PUT', headers:{Authorization:'token '+token, Accept:'application/vnd.github.v3+json', 'Content-Type':'application/json'}, body:JSON.stringify(body)}, 60000);
+  if(!res.ok) throw new Error('GitHub rechazó la subida (HTTP '+res.status+')');
+}
+async function persist(sectionKey, sectionValue, okMsg){
+  try{
+    await saveCitasSection(sectionKey, sectionValue);
+    if(okMsg) showToast(okMsg);
+  }catch(err){
+    showToast('Guardado solo en esta sesión — no se sincronizó: '+err.message);
+  }
+}
+
+/* ============================================================
+   Tabs principales + sub-tabs
+   ============================================================ */
+document.querySelectorAll('nav.tabs > button').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('nav.tabs > button').forEach(b=>{ b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+    btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+    document.getElementById('panel-proveedor').style.display = tab==='proveedor' ? '' : 'none';
+    document.getElementById('panel-almacen').style.display = tab==='almacen' ? '' : 'none';
+    document.getElementById('panel-ssoma').style.display = tab==='ssoma' ? '' : 'none';
+    if(tab==='almacen') renderAlmacenGate();
+    if(tab==='ssoma') renderSsomaGate();
+  });
+});
+function setupInnerTabs(container){
+  container.querySelectorAll('.inner-tabs button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const group = btn.closest('.inner-tabs');
+      group.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const target = btn.dataset.inner;
+      // sibling panels share prefix before last dash-part
+      const panels = container.querySelectorAll('[id$="-panel"]');
+      panels.forEach(p=>{
+        p.style.display = p.id === (target+'-panel') ? '' : 'none';
+      });
+    });
+  });
+}
+setupInnerTabs(document.getElementById('panel-proveedor'));
+
+/* ============================================================
+   Gauge de horario (8:00–13:00)
+   ============================================================ */
+function updateGauge(){
+  const now = new Date();
+  const startWindow = 6*60, endWindow = 15*60;
+  const openStart = 8*60, openEnd = 13*60;
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const pct = m => Math.min(100, Math.max(0, ((m-startWindow)/(endWindow-startWindow))*100));
+  document.getElementById('gaugeZone').style.left = pct(openStart)+'%';
+  document.getElementById('gaugeZone').style.width = (pct(openEnd)-pct(openStart))+'%';
+  document.getElementById('gaugeNow').style.left = pct(nowMin)+'%';
+  document.getElementById('gaugeClock').textContent = now.toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit'});
+  const pill = document.getElementById('statusPill');
+  const isOpen = nowMin >= openStart && nowMin <= openEnd;
+  pill.className = 'status-pill ' + (isOpen ? 'open':'closed');
+  document.getElementById('statusText').textContent = isOpen ? 'Dentro del horario de recepción' : 'Fuera del horario de recepción (8:00 a. m. – 1:00 p. m.)';
+}
+updateGauge(); setInterval(updateGauge, 30000);
+
+/* ============================================================
+   ROL 1 — PROVEEDOR
+   ============================================================ */
+const productoRows = [];
+function productoTemplate(id){
+  return `
+  <div class="repeater-item" data-id="${id}">
+    <button type="button" class="remove-btn" data-remove-producto="${id}" title="Quitar">✕</button>
+    <div class="field"><label>Descripción del producto</label><input type="text" data-field="desc" placeholder="Ej. Compresores industriales"></div>
+  </div>`;
+}
+function addProducto(){
+  const id = uid(); productoRows.push(id);
+  document.getElementById('productosList').insertAdjacentHTML('beforeend', productoTemplate(id));
+}
+document.getElementById('addProducto').addEventListener('click', addProducto);
+addProducto();
+document.getElementById('productosList').addEventListener('click', e=>{
+  const btn = e.target.closest('[data-remove-producto]'); if(!btn) return;
+  const idx = productoRows.indexOf(btn.dataset.removeProducto);
+  if(idx>-1 && productoRows.length>1){ productoRows.splice(idx,1); btn.closest('.repeater-item').remove(); }
+  else showToast('Debe quedar al menos un producto registrado.');
+});
+
+// Personas adicionales dinámicas
+function renderPersonasExtra(){
+  const n = Math.max(0, Math.min(10, parseInt(document.getElementById('numPersonasExtra').value || '0', 10)));
+  const wrap = document.getElementById('personasExtraList');
+  const current = wrap.querySelectorAll('.repeater-item').length;
+  if(n > current){
+    for(let i=current;i<n;i++){
+      wrap.insertAdjacentHTML('beforeend', `
+        <div class="repeater-item">
+          <div class="row2">
+            <div class="field"><label>Nombre completo (persona ${i+2})</label><input type="text" data-field="nombre" placeholder="Nombres y apellidos"></div>
+            <div class="field"><label>DNI (persona ${i+2})</label><input type="text" data-field="dni" placeholder="N.º de documento"></div>
+          </div>
+        </div>`);
+    }
+  } else {
+    const items = wrap.querySelectorAll('.repeater-item');
+    for(let i=items.length-1;i>=n;i--) items[i].remove();
+  }
+}
+document.getElementById('numPersonasExtra').addEventListener('input', renderPersonasExtra);
+
+document.getElementById('tipoIngresoGroup').addEventListener('change', e=>{
+  document.querySelectorAll('#tipoIngresoGroup .radio-chip').forEach(c=>c.classList.remove('checked'));
+  e.target.closest('.radio-chip').classList.add('checked');
+  document.getElementById('vehiculoFieldset').style.display = e.target.value==='Vehicular' ? '' : 'none';
+});
+document.querySelector('#tipoIngresoGroup .radio-chip').classList.add('checked');
+
+document.getElementById('hourGrid').addEventListener('change', e=>{
+  document.querySelectorAll('#hourGrid .hour-chip').forEach(c=>c.classList.remove('checked'));
+  e.target.closest('.hour-chip').classList.add('checked');
+});
+
+function setInvalid(fieldEl, invalid){ if(fieldEl) fieldEl.classList.toggle('invalid', invalid); }
+
+document.getElementById('formRecepcion').addEventListener('submit', async e=>{
+  e.preventDefault();
+  let valid = true;
+
+  const razonSocial = document.getElementById('razonSocial');
+  setInvalid(razonSocial.closest('.field'), !razonSocial.value.trim()); if(!razonSocial.value.trim()) valid=false;
+
+  const ordenCompra = document.getElementById('ordenCompra');
+  setInvalid(ordenCompra.closest('.field'), !ordenCompra.value.trim()); if(!ordenCompra.value.trim()) valid=false;
+
+  const fecha = document.getElementById('fechaRecepcion');
+  setInvalid(fecha.closest('.field'), !fecha.value); if(!fecha.value) valid=false;
+
+  const bloqueEl = document.querySelector('input[name=bloqueHorario]:checked');
+  document.getElementById('errHorario').style.display = bloqueEl ? 'none' : 'block';
+  if(!bloqueEl) valid=false;
+
+  const choferNombre = document.getElementById('choferNombre');
+  setInvalid(choferNombre.closest('.field'), !choferNombre.value.trim()); if(!choferNombre.value.trim()) valid=false;
+
+  const choferBrevete = document.getElementById('choferBrevete');
+  setInvalid(choferBrevete.closest('.field'), !choferBrevete.value.trim()); if(!choferBrevete.value.trim()) valid=false;
+
+  const docSctrInput = document.getElementById('docSctr');
+  setInvalid(docSctrInput.closest('.field'), !docSctrInput.value.trim()); if(!docSctrInput.value.trim()) valid=false;
+
+  const docDniInput = document.getElementById('docDni');
+  setInvalid(docDniInput.closest('.field'), !docDniInput.value.trim()); if(!docDniInput.value.trim()) valid=false;
+
+  const tipoIngreso = document.querySelector('input[name=tipoIngreso]:checked').value;
+  let vehiculo = null, docSoatInput=null, docBreveteVehInput=null, docRevTecInput=null;
+  if(tipoIngreso==='Vehicular'){
+    const placa = document.getElementById('vehPlaca');
+    setInvalid(placa.closest('.field'), !placa.value.trim()); if(!placa.value.trim()) valid=false;
+    vehiculo = { tipo: document.getElementById('vehTipo').value.trim(), placa: placa.value.trim() };
+    docSoatInput = document.getElementById('docSoat');
+    docBreveteVehInput = document.getElementById('docBrevete');
+    docRevTecInput = document.getElementById('docRevTec');
+    setInvalid(docSoatInput.closest('.field'), !docSoatInput.value.trim()); if(!docSoatInput.value.trim()) valid=false;
+    setInvalid(docBreveteVehInput.closest('.field'), !docBreveteVehInput.value.trim()); if(!docBreveteVehInput.value.trim()) valid=false;
+    setInvalid(docRevTecInput.closest('.field'), !docRevTecInput.value.trim()); if(!docRevTecInput.value.trim()) valid=false;
+  }
+
+  if(!valid){ showToast('Revisa los campos marcados en el formulario.'); return; }
+
+  const personas = [...document.querySelectorAll('#personasExtraList .repeater-item')].map(item=>({
+    nombre: item.querySelector('[data-field=nombre]').value.trim(),
+    dni: item.querySelector('[data-field=dni]').value.trim()
+  }));
+  const productos = [...document.querySelectorAll('#productosList .repeater-item')].map(item=>({
+    desc: item.querySelector('[data-field=desc]').value.trim()
+  }));
+
+  const folio = nextFolio();
+  state.recepciones.unshift({
+    id: uid(), folio,
+    razonSocial: razonSocial.value.trim(),
+    ordenCompra: ordenCompra.value.trim(),
+    fecha: fecha.value, bloqueHorario: bloqueEl.value,
+    chofer: { nombre: choferNombre.value.trim(), brevete: choferBrevete.value.trim() },
+    personas, productos,
+    tipoIngreso, vehiculo,
+    documentos: {
+      sctr: docSctrInput.value.trim(), dni: docDniInput.value.trim(),
+      soat: docSoatInput ? docSoatInput.value.trim() : '',
+      brevete: docBreveteVehInput ? docBreveteVehInput.value.trim() : '',
+      revisionTecnica: docRevTecInput ? docRevTecInput.value.trim() : ''
+    },
+    estadoLlegada: null,
+    ssoma: { estado:'pendiente', eppVerificado:false, comentario:'', fecha:null }
+  });
+
+  e.target.reset();
+  document.getElementById('personasExtraList').innerHTML=''; document.getElementById('numPersonasExtra').value=0;
+  document.getElementById('productosList').innerHTML=''; productoRows.length=0; addProducto();
+  document.getElementById('vehiculoFieldset').style.display='none';
+  document.querySelectorAll('.field.invalid').forEach(f=>f.classList.remove('invalid'));
+  document.querySelectorAll('#tipoIngresoGroup .radio-chip').forEach((c,i)=>c.classList.toggle('checked', i===0));
+  document.querySelectorAll('#hourGrid .hour-chip').forEach(c=>c.classList.remove('checked'));
+  if(currentProveedor) document.getElementById('razonSocial').value = currentProveedor.razonSocial;
+
+  showFolioConfirm(folio);
+  renderAlmacenRecepciones(); renderSsoma();
+  persist('recepciones', state.recepciones);
+  persist('folioCounter', state.folioCounter);
+});
+
+function showFolioConfirm(folio){
+  const card = document.getElementById('folioConfirmCard');
+  document.getElementById('folioConfirmText').textContent = folio;
+  card.style.display = '';
+  card.scrollIntoView({behavior:'smooth', block:'center'});
+  showToast(`Cita registrada. Tu folio es ${folio}.`);
+}
+function copyToClipboard(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(text);
+  }
+  // Fallback para navegadores sin acceso al portapapeles
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.focus(); ta.select();
+  try{ document.execCommand('copy'); } finally { document.body.removeChild(ta); }
+  return Promise.resolve();
+}
+document.getElementById('btnCopiarFolio').addEventListener('click', ()=>{
+  const folio = document.getElementById('folioConfirmText').textContent;
+  const btn = document.getElementById('btnCopiarFolio');
+  copyToClipboard(folio).then(()=>{
+    btn.textContent = '✓ Copiado';
+    btn.classList.add('copied');
+    showToast('Folio copiado al portapapeles.');
+    setTimeout(()=>{ btn.textContent='Copiar folio'; btn.classList.remove('copied'); }, 2200);
+  }).catch(()=>{
+    showToast('No se pudo copiar automáticamente. Selecciona el folio manualmente.');
+  });
+});
+document.getElementById('btnIrAConsultar').addEventListener('click', ()=>{
+  const folio = document.getElementById('folioConfirmText').textContent;
+  document.querySelector('.inner-tabs button[data-inner="prov-consulta"]').click();
+  document.getElementById('consultaFolio').value = folio;
+  document.getElementById('btnConsultar').click();
+});
+
+// Consulta de folio (proveedor)
+document.getElementById('btnConsultar').addEventListener('click', ()=>{
+  const folio = document.getElementById('consultaFolio').value.trim().toUpperCase();
+  const wrap = document.getElementById('consultaResultado');
+  const cita = state.recepciones.find(c=>c.folio.toUpperCase()===folio);
+  if(!cita){
+    wrap.innerHTML = `<div class="empty-state" style="margin-top:16px;">No se encontró ninguna cita con ese folio.</div>`;
+    return;
+  }
+  const llegadaTxt = {atiempo:'Llegó a tiempo', no_llego:'No llegó', fuera_tiempo:'Llegó fuera de tiempo'}[cita.estadoLlegada] || 'Aún sin registrar por almacén';
+  const ssomaTxt = {pendiente:'Pendiente de verificación', aprobado:'Ingreso aprobado', rechazado:'Ingreso rechazado'}[cita.ssoma.estado];
+  const visto = cita.ssoma.estado !== 'pendiente';
+  const tieneObservacion = !!cita.ssoma.comentario;
+  wrap.innerHTML = `
+    <div class="entry" style="margin-top:16px;">
+      <div class="entry-top"><span class="name">${esc(cita.razonSocial)}</span><span class="badge folio">${esc(cita.folio)}</span></div>
+      <div class="entry-meta">
+        <b>Fecha y horario:</b> ${esc(cita.fecha)} · ${esc(cita.bloqueHorario)}<br>
+        <b>Estado de llegada (almacén):</b> ${esc(llegadaTxt)}<br>
+        <b>¿Documentación revisada por SSOMA?</b> ${visto ? '<span class="visto-yes">Sí, ya fue revisada</span>' : '<span class="visto-no">Aún no, está pendiente</span>'}<br>
+        <b>Resultado de la verificación:</b> ${esc(ssomaTxt)}
+        <div class="tag-row">
+          <span class="badge ${cita.ssoma.estado}">${ssomaTxt}</span>
+          ${cita.estadoLlegada ? `<span class="badge ${cita.estadoLlegada}">${esc(llegadaTxt)}</span>` : ''}
+        </div>
+        <b style="display:block;margin-top:10px;">Observaciones de SSOMA:</b>
+        <div class="observaciones-box ${tieneObservacion ? '' : 'none'}">${tieneObservacion ? esc(cita.ssoma.comentario) : 'Sin observaciones registradas por el momento.'}</div>
+      </div>
+    </div>`;
+});
+
+/* ============================================================
+   Password gates
+   ============================================================ */
+function gateTemplate(role, title, desc){
+  return `
+    <div class="lock-gate">
+      <svg class="lock-icon" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="1.6"/></svg>
+      <h3>${title}</h3>
+      <p>${desc}</p>
+      <div class="field">
+        <label for="pass-${role}">Contraseña</label>
+        <input type="password" id="pass-${role}" placeholder="Ingresa la contraseña">
+      </div>
+      <button type="button" class="btn-primary" id="unlock-${role}">Ingresar</button>
+      <p class="gate-error" id="gate-error-${role}">Contraseña incorrecta. Inténtalo de nuevo.</p>
+    </div>`;
+}
+function renderAlmacenGate(){
+  if(state.unlocked.almacen){ showAlmacenContent(); return; }
+  document.getElementById('almacen-content').style.display='none';
+  document.getElementById('almacen-gate').innerHTML = gateTemplate('almacen','Acceso de almacén','Este panel es solo para el equipo de almacén de Grupo Friopacking.');
+  document.getElementById('unlock-almacen').addEventListener('click', ()=>{
+    const val = document.getElementById('pass-almacen').value;
+    if(val === PASSWORDS.almacen){
+      state.unlocked.almacen = true;
+      document.getElementById('lockIcoAlmacen').textContent = '🔓';
+      showAlmacenContent();
+    } else {
+      document.getElementById('gate-error-almacen').style.display='block';
+    }
+  });
+}
+function showAlmacenContent(){
+  document.getElementById('almacen-gate').innerHTML='';
+  document.getElementById('almacen-content').style.display='';
+  setupInnerTabs(document.getElementById('panel-almacen'));
+  renderAlmacenRecepciones();
+  renderCalendar(); renderDespacho();
+  renderProveedoresAutorizadosList();
+}
+
+/* ============================================================
+   ROL 1 — Login de proveedor (RUC + correo del asesor comercial)
+   El correo nunca se guarda en texto plano: solo se compara un
+   hash sha256(ruc|correo) contra lo que Almacén habilitó.
+   ============================================================ */
+function renderProveedorGate(){
+  document.getElementById('proveedor-content').style.display = 'none';
+  document.getElementById('proveedor-gate').innerHTML = `
+    <div class="lock-gate">
+      <svg class="lock-icon" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="1.6"/></svg>
+      <h3>Acceso de proveedor</h3>
+      <p>Ingresa el RUC de tu empresa y el correo de tu asesor comercial registrado con Compras para agendar tu cita.</p>
+      <div class="field"><label for="provRuc">RUC de tu empresa</label><input type="text" id="provRuc" placeholder="Ej. 20602140891"></div>
+      <div class="field"><label for="provCorreo">Correo del asesor comercial</label><input type="text" id="provCorreo" placeholder="correo@empresa.com"></div>
+      <button type="button" class="btn-primary" id="btnProveedorIngresar">Ingresar</button>
+      <p class="gate-error" id="proveedor-gate-error">El RUC y el correo no coinciden con los registrados. Verifica con tu ejecutivo de Compras.</p>
+    </div>`;
+  document.getElementById('btnProveedorIngresar').addEventListener('click', intentarAccesoProveedor);
+}
+async function intentarAccesoProveedor(){
+  const errEl = document.getElementById('proveedor-gate-error');
+  errEl.style.display = 'none';
+  const ruc = normalizar(document.getElementById('provRuc').value);
+  const correo = normalizar(document.getElementById('provCorreo').value);
+  if(!ruc || !correo){
+    errEl.textContent = 'Ingresa tu RUC y el correo del asesor comercial.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(!state.proveedoresAutorizados.length){
+    errEl.textContent = 'Aún no hay proveedores habilitados en Citas. Coordina con Compras para que te habiliten.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const hash = await sha256(ruc + '|' + correo);
+  const match = state.proveedoresAutorizados.find(p => normalizar(p.ruc)===ruc && (p.hashes||[]).includes(hash));
+  if(!match){
+    errEl.textContent = 'El RUC y el correo no coinciden con los registrados. Verifica con tu ejecutivo de Compras.';
+    errEl.style.display = 'block';
+    return;
+  }
+  currentProveedor = { ruc: match.ruc, razonSocial: match.razonSocial };
+  document.getElementById('proveedor-gate').innerHTML = '';
+  document.getElementById('proveedor-content').style.display = '';
+  document.getElementById('provNombreActivo').textContent = match.razonSocial + ' · RUC ' + match.ruc;
+  document.getElementById('razonSocial').value = match.razonSocial;
+}
+function resetProveedorGate(){
+  currentProveedor = null;
+  document.getElementById('provRuc') && (document.getElementById('provRuc').value = '');
+  renderProveedorGate();
+}
+document.getElementById('btnCambiarProveedor').addEventListener('click', resetProveedorGate);
+
+/* ============================================================
+   Administración de accesos de proveedores (dentro de Almacén)
+   ============================================================ */
+function renderProveedoresAutorizadosList(){
+  const wrap = document.getElementById('listaProveedoresAutorizados');
+  if(!wrap) return;
+  const list = state.proveedoresAutorizados;
+  if(!list.length){ wrap.innerHTML = `<div class="empty-state">Aún no hay proveedores habilitados.</div>`; return; }
+  wrap.innerHTML = list.map(p=>`
+    <div class="entry" data-ruc="${esc(p.ruc)}">
+      <div class="entry-top"><span class="name">${esc(p.razonSocial)}</span><span class="time mono">RUC ${esc(p.ruc)}</span></div>
+      <div class="entry-meta">${(p.hashes||[]).length} correo(s) de asesor habilitado(s) &nbsp; <button type="button" class="btn-secondary" data-quitar="${esc(p.ruc)}" style="width:auto;padding:4px 10px;font-size:11.5px;">Quitar</button></div>
+    </div>`).join('');
+  wrap.querySelectorAll('[data-quitar]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.proveedoresAutorizados = state.proveedoresAutorizados.filter(p=>p.ruc!==btn.dataset.quitar);
+      renderProveedoresAutorizadosList();
+      persist('proveedoresAutorizados', state.proveedoresAutorizados, 'Proveedor removido y guardado.');
+    });
+  });
+}
+document.getElementById('formHabilitarProveedor').addEventListener('submit', async e=>{
+  e.preventDefault();
+  const ruc = document.getElementById('habRuc').value.trim();
+  const razonSocial = document.getElementById('habRazonSocial').value.trim();
+  const correosRaw = document.getElementById('habCorreo').value.trim();
+  if(!ruc || !razonSocial || !correosRaw){ showToast('Completa RUC, razón social y correo del asesor.'); return; }
+  const correos = correosRaw.split(/[,;\s]+/).map(normalizar).filter(Boolean);
+  const hashes = await Promise.all(correos.map(c=>sha256(normalizar(ruc)+'|'+c)));
+  const existing = state.proveedoresAutorizados.find(p=>normalizar(p.ruc)===normalizar(ruc));
+  if(existing){
+    existing.razonSocial = razonSocial;
+    existing.hashes = Array.from(new Set([...(existing.hashes||[]), ...hashes]));
+  } else {
+    state.proveedoresAutorizados.push({ ruc, razonSocial, hashes });
+  }
+  e.target.reset();
+  renderProveedoresAutorizadosList();
+  persist('proveedoresAutorizados', state.proveedoresAutorizados, 'Proveedor habilitado y guardado.');
+});
+function renderSsomaGate(){
+  if(state.unlocked.ssoma){ showSsomaContent(); return; }
+  document.getElementById('ssoma-content').style.display='none';
+  document.getElementById('ssoma-gate').innerHTML = gateTemplate('ssoma','Acceso SSOMA','Este panel es solo para el área de Seguridad, Salud Ocupacional y Medio Ambiente.');
+  document.getElementById('unlock-ssoma').addEventListener('click', ()=>{
+    const val = document.getElementById('pass-ssoma').value;
+    if(val === PASSWORDS.ssoma){
+      state.unlocked.ssoma = true;
+      document.getElementById('lockIcoSsoma').textContent = '🔓';
+      showSsomaContent();
+    } else {
+      document.getElementById('gate-error-ssoma').style.display='block';
+    }
+  });
+}
+function showSsomaContent(){
+  document.getElementById('ssoma-gate').innerHTML='';
+  document.getElementById('ssoma-content').style.display='';
+  renderSsoma();
+}
+
+/* ============================================================
+   ROL 2 — ALMACÉN: citas de recepción (checklist de llegada)
+   ============================================================ */
+function renderAlmacenRecepciones(){
+  const wrap = document.getElementById('listaAlmacenRecepciones');
+  if(!wrap) return;
+  const list = state.recepciones;
+
+  if(list.length===0){
+    wrap.innerHTML = `<div class="empty-state">Aún no hay citas de recepción solicitadas por proveedores.</div>`;
+  } else {
+    wrap.innerHTML = list.map(c=>`
+      <div class="entry">
+        <div class="entry-top">
+          <span class="name">${esc(c.razonSocial)}</span>
+          <span class="time">${esc(c.fecha)} · ${esc(c.bloqueHorario)}</span>
+        </div>
+        <div class="entry-meta">
+          <b>Folio:</b> <span class="badge folio">${esc(c.folio)}</span> &nbsp; <b>Chofer:</b> ${esc(c.chofer.nombre)} &nbsp; <b>OC:</b> ${esc(c.ordenCompra)}
+          <div class="tag-row">
+            <span class="badge ${c.tipoIngreso==='Vehicular'?'vehicular':'peatonal'}">${c.tipoIngreso}</span>
+            <span class="badge ${c.ssoma.estado}">SSOMA: ${c.ssoma.estado}</span>
+          </div>
+          <div class="checklist-row" data-cita="${c.id}">
+            <button type="button" class="cl-btn on-atiempo ${c.estadoLlegada==='atiempo'?'active':''}" data-estado="atiempo">Llegó a tiempo</button>
+            <button type="button" class="cl-btn on-no_llego ${c.estadoLlegada==='no_llego'?'active':''}" data-estado="no_llego">No llegó</button>
+            <button type="button" class="cl-btn on-fuera_tiempo ${c.estadoLlegada==='fuera_tiempo'?'active':''}" data-estado="fuera_tiempo">Llegó fuera de tiempo</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    wrap.querySelectorAll('.checklist-row').forEach(row=>{
+      row.addEventListener('click', e=>{
+        const btn = e.target.closest('.cl-btn'); if(!btn) return;
+        const cita = state.recepciones.find(x=>x.id===row.dataset.cita);
+        cita.estadoLlegada = btn.dataset.estado;
+        renderAlmacenRecepciones();
+        showToast('Estado de llegada actualizado.');
+        persist('recepciones', state.recepciones);
+      });
+    });
+  }
+
+  const stats = document.getElementById('statsAlmacen');
+  const hoy = list.filter(c=>c.fecha===todayISO()).length;
+  const pendientes = list.filter(c=>!c.estadoLlegada).length;
+  stats.innerHTML = `
+    <div class="stat-card"><div class="num">${list.length}</div><div class="lbl">Citas totales</div></div>
+    <div class="stat-card"><div class="num">${hoy}</div><div class="lbl">Citas para hoy</div></div>
+    <div class="stat-card"><div class="num">${pendientes}</div><div class="lbl">Sin marcar llegada</div></div>
+  `;
+}
+
+/* ---------- Despacho (dentro de Almacén) ---------- */
+document.getElementById('tipoTransporteGroup').addEventListener('change', e=>{
+  document.querySelectorAll('#tipoTransporteGroup .radio-chip').forEach(c=>c.classList.remove('checked'));
+  e.target.closest('.radio-chip').classList.add('checked');
+  document.getElementById('empresaTransporteField').style.display = e.target.value==='Externo' ? '' : 'none';
+});
+document.querySelector('#tipoTransporteGroup .radio-chip').classList.add('checked');
+
+const DOW = ['Do','Lu','Ma','Mi','Ju','Vi','Sa'];
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function renderCalendar(){
+  const dowWrap = document.getElementById('calDow'); if(!dowWrap) return;
+  dowWrap.innerHTML = DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  const year = state.calYear, month = state.calMonth;
+  document.getElementById('calMonthLabel').textContent = `${MESES[month]} ${year}`;
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const todayStr = todayISO();
+  const cells = [];
+  for(let i=firstDow-1;i>=0;i--) cells.push({day: daysInPrevMonth-i, muted:true});
+  for(let d=1; d<=daysInMonth; d++) cells.push({day:d, muted:false});
+  while(cells.length % 7 !== 0 || cells.length < 42){ cells.push({day: cells.length - (firstDow+daysInMonth) + 1, muted:true}); if(cells.length>=42) break; }
+  const grid = document.getElementById('calGrid');
+  grid.innerHTML = cells.map(c=>{
+    if(c.muted) return `<div class="cal-day muted">${c.day}</div>`;
+    const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(c.day).padStart(2,'0')}`;
+    const count = state.despachos.filter(x=>x.fecha===iso).length;
+    const isToday = iso === todayStr, isSelected = iso === state.selectedDate;
+    return `<div class="cal-day ${isToday?'today':''} ${isSelected?'selected':''}" data-date="${iso}">${c.day}${count>0?'<span class="dot-count"></span>':''}</div>`;
+  }).join('');
+  grid.querySelectorAll('.cal-day:not(.muted)').forEach(el=>{
+    el.addEventListener('click', ()=>{ state.selectedDate = el.dataset.date; renderCalendar(); renderDespacho(); });
+  });
+}
+document.getElementById('calPrev').addEventListener('click', ()=>{ state.calMonth--; if(state.calMonth<0){state.calMonth=11; state.calYear--;} renderCalendar(); });
+document.getElementById('calNext').addEventListener('click', ()=>{ state.calMonth++; if(state.calMonth>11){state.calMonth=0; state.calYear++;} renderCalendar(); });
+
+function fmtDateEs(iso){ const [y,m,d] = iso.split('-').map(Number); return `${d} de ${MESES[m-1].toLowerCase()} de ${y}`; }
+
+document.getElementById('formDespacho').addEventListener('submit', e=>{
+  e.preventDefault();
+  let valid = true;
+  const proyecto = document.getElementById('proyectoDestino');
+  setInvalid(proyecto.closest('.field'), !proyecto.value.trim()); if(!proyecto.value.trim()) valid=false;
+  const hora = document.getElementById('horaDespacho');
+  setInvalid(hora.closest('.field'), !hora.value.trim()); if(!hora.value.trim()) valid=false;
+  const nombre = document.getElementById('transportistaNombre');
+  setInvalid(nombre.closest('.field'), !nombre.value.trim()); if(!nombre.value.trim()) valid=false;
+  const guia = document.getElementById('numeroGuia');
+  setInvalid(guia.closest('.field'), !guia.value.trim()); if(!guia.value.trim()) valid=false;
+  if(!valid){ showToast('Revisa los campos marcados en el formulario.'); return; }
+
+  const tipoTransporte = document.querySelector('input[name=tipoTransporte]:checked').value;
+  state.despachos.unshift({
+    id: uid(), fecha: state.selectedDate, hora: hora.value.trim(), proyecto: proyecto.value.trim(),
+    tipoTransporte, empresaTransporte: tipoTransporte==='Externo' ? document.getElementById('empresaTransporte').value.trim() : 'Friopacking S.A.C.',
+    transportistaNombre: nombre.value.trim(), transportistaDni: document.getElementById('transportistaDni').value.trim(),
+    guia: guia.value.trim()
+  });
+
+  e.target.reset();
+  document.querySelectorAll('.field.invalid').forEach(f=>f.classList.remove('invalid'));
+  document.getElementById('empresaTransporteField').style.display='none';
+  document.querySelectorAll('#tipoTransporteGroup .radio-chip').forEach((c,i)=>c.classList.toggle('checked', i===0));
+  showToast('Cita de despacho programada correctamente.');
+  renderCalendar(); renderDespacho();
+  persist('despachos', state.despachos);
+});
+
+function renderDespacho(){
+  const label = document.getElementById('selectedDateLabel'); if(!label) return;
+  label.textContent = fmtDateEs(state.selectedDate);
+  document.getElementById('formFechaLabel').textContent = fmtDateEs(state.selectedDate);
+  const items = state.despachos.filter(x=>x.fecha===state.selectedDate).sort((a,b)=>a.hora.localeCompare(b.hora));
+  const wrap = document.getElementById('listaDespachoDia');
+  if(items.length===0){
+    wrap.innerHTML = `<div class="empty-state">No hay despachos programados para esta fecha.</div>`;
+  } else {
+    wrap.innerHTML = items.map(c=>`
+      <div class="entry">
+        <div class="entry-top"><span class="name">${esc(c.proyecto)}</span><span class="time">${esc(c.hora)}</span></div>
+        <div class="entry-meta">
+          <b>Transportista:</b> ${esc(c.transportistaNombre)} ${c.transportistaDni?`(DNI ${esc(c.transportistaDni)})`:''}<br>
+          <b>Empresa:</b> ${esc(c.empresaTransporte)}<br><b>Guía:</b> ${esc(c.guia)}
+          <div class="tag-row"><span class="badge ${c.tipoTransporte==='Interno'?'interno':'externo'}">${c.tipoTransporte}</span></div>
+        </div>
+      </div>
+    `).join('');
+  }
+  const stats = document.getElementById('statsDespacho'); if(!stats) return;
+  const totalMes = state.despachos.filter(x=>x.fecha.startsWith(`${state.calYear}-${String(state.calMonth+1).padStart(2,'0')}`)).length;
+  const internos = state.despachos.filter(x=>x.tipoTransporte==='Interno').length;
+  stats.innerHTML = `
+    <div class="stat-card"><div class="num">${state.despachos.length}</div><div class="lbl">Despachos totales</div></div>
+    <div class="stat-card"><div class="num">${totalMes}</div><div class="lbl">Despachos este mes</div></div>
+    <div class="stat-card"><div class="num">${internos}</div><div class="lbl">Transporte interno</div></div>
+  `;
+}
+
+/* ============================================================
+   ROL 3 — SSOMA: verificación documentaria y aprobación
+   ============================================================ */
+function renderSsoma(){
+  const wrap = document.getElementById('listaSsoma');
+  if(!wrap) return;
+  const list = state.recepciones;
+
+  if(list.length===0){
+    wrap.innerHTML = `<div class="empty-state">Aún no hay citas de recepción para verificar.</div>`;
+  } else {
+    wrap.innerHTML = list.map(c=>{
+      const personasTxt = [c.chofer.nombre + ' (chofer)', ...c.personas.map(p=>p.nombre||'(sin nombre)')].join(', ');
+      return `
+      <div class="entry" data-cita="${c.id}">
+        <div class="entry-top">
+          <span class="name">${esc(c.razonSocial)} <span class="badge folio">${esc(c.folio)}</span></span>
+          <span class="badge ${c.ssoma.estado}">${c.ssoma.estado}</span>
+        </div>
+        <div class="entry-meta">
+          <b>Fecha/horario:</b> ${esc(c.fecha)} · ${esc(c.bloqueHorario)} &nbsp; <b>OC:</b> ${esc(c.ordenCompra)}<br>
+          <b>Personas ingresando:</b> ${esc(personasTxt)}<br>
+          <b>N.º de brevete (chofer):</b> ${esc(c.chofer.brevete)}<br>
+          <b>Tipo de ingreso:</b> ${esc(c.tipoIngreso)}${c.vehiculo ? ` — ${esc(c.vehiculo.tipo)||'Vehículo'} · Placa ${esc(c.vehiculo.placa)}` : ''}
+          <div class="doc-links">
+            ${docLink(c.documentos.sctr,'SCTR')}
+            ${docLink(c.documentos.dni,'DNI')}
+            ${c.tipoIngreso==='Vehicular' ? docLink(c.documentos.soat,'SOAT') : ''}
+            ${c.tipoIngreso==='Vehicular' ? docLink(c.documentos.brevete,'Brevete') : ''}
+            ${c.tipoIngreso==='Vehicular' ? docLink(c.documentos.revisionTecnica,'Revisión técnica') : ''}
+          </div>
+          <div class="verify-grid">
+            <label class="verify-item"><input type="checkbox" data-check="eppVerificado" ${c.ssoma.eppVerificado?'checked':''}> Cuenta con EPP (verificado en sitio)</label>
+          </div>
+          <div class="field">
+            <label>Comentario / aviso para el proveedor</label>
+            <input type="text" data-field="comentario" value="${esc(c.ssoma.comentario)}" placeholder="Ej. Documentación conforme, ingreso autorizado.">
+          </div>
+          <div class="checklist-row">
+            <button type="button" class="btn-secondary" data-decision="aprobado">✅ Aprobar ingreso</button>
+            <button type="button" class="btn-secondary" data-decision="rechazado">⛔ Rechazar ingreso</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+    wrap.querySelectorAll('.entry').forEach(row=>{
+      const cita = state.recepciones.find(x=>x.id===row.dataset.cita);
+      row.querySelector('[data-check=eppVerificado]').addEventListener('change', e=>{
+        cita.ssoma.eppVerificado = e.target.checked;
+        persist('recepciones', state.recepciones);
+      });
+      row.querySelector('[data-field=comentario]').addEventListener('input', e=>{
+        cita.ssoma.comentario = e.target.value;
+      });
+      row.querySelector('[data-field=comentario]').addEventListener('blur', ()=>{
+        persist('recepciones', state.recepciones);
+      });
+      row.querySelectorAll('[data-decision]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          cita.ssoma.estado = btn.dataset.decision;
+          cita.ssoma.fecha = new Date().toISOString();
+          if(!cita.ssoma.comentario){
+            cita.ssoma.comentario = btn.dataset.decision==='aprobado'
+              ? 'Documentación conforme. Ingreso autorizado.'
+              : 'Ingreso no autorizado. Revisar documentación con SSOMA.';
+          }
+          renderSsoma(); renderAlmacenRecepciones();
+          showToast(`Cita ${cita.folio}: ${btn.dataset.decision==='aprobado'?'aprobada':'rechazada'}. El proveedor puede ver el aviso con su folio.`);
+          persist('recepciones', state.recepciones);
+        });
+      });
+    });
+  }
+
+  const stats = document.getElementById('statsSsoma');
+  const pendientes = list.filter(c=>c.ssoma.estado==='pendiente').length;
+  const aprobadas = list.filter(c=>c.ssoma.estado==='aprobado').length;
+  const rechazadas = list.filter(c=>c.ssoma.estado==='rechazado').length;
+  stats.innerHTML = `
+    <div class="stat-card"><div class="num">${pendientes}</div><div class="lbl">Pendientes</div></div>
+    <div class="stat-card"><div class="num">${aprobadas}</div><div class="lbl">Aprobadas</div></div>
+    <div class="stat-card"><div class="num">${rechazadas}</div><div class="lbl">Rechazadas</div></div>
+  `;
+}
+
+/* ============================================================
+   Init
+   ============================================================ */
+document.getElementById('fechaRecepcion').value = todayISO();
+renderProveedorGate();
+
+async function initCitas(){
+  const remote = await loadCitasRemote();
+  if(remote){
+    state.recepciones = remote.recepciones || [];
+    state.despachos = remote.despachos || [];
+    state.proveedoresAutorizados = remote.proveedoresAutorizados || [];
+    if(remote.folioCounter) state.folioCounter = remote.folioCounter;
+  }
+  renderAlmacenRecepciones(); renderSsoma(); renderCalendar(); renderDespacho(); renderProveedoresAutorizadosList();
+}
+initCitas();
+</script>
+</body>
+</html>
