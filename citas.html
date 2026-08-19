@@ -628,11 +628,11 @@ function docLink(link, label){
 
 /* ============================================================
    STORAGE — mismo patrón que Facturas/Compras: un archivo JSON
-   propio en el repo de GitHub que usa la plataforma, con token de
-   escritura guardado solo en el navegador de quien lo ingresa.
-   TODO: actualizar GH_REPO_CITAS cuando el repo de Piero esté listo.
+   propio en el repo de GitHub de Piero (donde vive este módulo),
+   con token de escritura guardado solo en el navegador de quien
+   lo ingresa.
    ============================================================ */
-const GH_REPO_CITAS = 'Melissa2026714/dashboard-friopacking';
+const GH_REPO_CITAS = 'Pierolp20/friopacking-citas';
 const GH_FILE_CITAS = 'citas_data.json';
 const GH_RAW_CITAS = 'https://raw.githubusercontent.com/'+GH_REPO_CITAS+'/main/'+GH_FILE_CITAS;
 const GH_API_CITAS = 'https://api.github.com/repos/'+GH_REPO_CITAS+'/contents/'+GH_FILE_CITAS;
