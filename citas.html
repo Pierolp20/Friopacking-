@@ -485,6 +485,13 @@
             <button type="submit" class="btn-secondary" style="width:auto;">+ Habilitar proveedor</button>
           </form>
           <div id="listaProveedoresAutorizados" style="margin-top:14px;"></div>
+
+          <div class="divider"></div>
+          <h3 style="font-size:13.5px;">Carga masiva</h3>
+          <p class="card-hint">Pega una línea por proveedor con el formato <span class="mono">RUC|Razón social|correo</span> (si hay varios correos, sepáralos con coma). Ejemplo: <span class="mono">20602140891|SAVI GROUP SAC|comercial@savisafety.com</span></p>
+          <textarea id="habBulkText" rows="6" placeholder="20602140891|SAVI GROUP SAC|comercial@savisafety.com&#10;20111740438|SONEPAR PERU SAC|luis.correa@sonepar.pe"></textarea>
+          <button type="button" class="btn-secondary" id="btnHabilitarBulk" style="width:auto;margin-top:10px;">Cargar lista completa</button>
+          <p class="card-hint" id="habBulkResultado" style="margin-top:8px;"></p>
         </div>
       </div>
 
@@ -1021,12 +1028,22 @@ function renderProveedorGate(){
       <svg class="lock-icon" viewBox="0 0 24 24" fill="none"><rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M7 10V7a5 5 0 0 1 10 0v3" stroke="currentColor" stroke-width="1.6"/></svg>
       <h3>Acceso de proveedor</h3>
       <p>Ingresa el RUC de tu empresa y el correo de tu asesor comercial registrado con Compras para agendar tu cita.</p>
-      <div class="field"><label for="provRuc">RUC de tu empresa</label><input type="text" id="provRuc" placeholder="Ej. 20602140891"></div>
+      <div class="field">
+        <label for="provRuc">RUC de tu empresa</label>
+        <input type="text" id="provRuc" placeholder="Ej. 20602140891">
+        <p class="hint" id="provRucHint" style="margin-top:5px;"></p>
+      </div>
       <div class="field"><label for="provCorreo">Correo del asesor comercial</label><input type="text" id="provCorreo" placeholder="correo@empresa.com"></div>
       <button type="button" class="btn-primary" id="btnProveedorIngresar">Ingresar</button>
       <p class="gate-error" id="proveedor-gate-error">El RUC y el correo no coinciden con los registrados. Verifica con tu ejecutivo de Compras.</p>
     </div>`;
   document.getElementById('btnProveedorIngresar').addEventListener('click', intentarAccesoProveedor);
+  document.getElementById('provRuc').addEventListener('input', e=>{
+    const hint = document.getElementById('provRucHint');
+    const match = state.proveedoresAutorizados.find(p => normalizar(p.ruc)===normalizar(e.target.value));
+    hint.textContent = match ? `✓ ${match.razonSocial}` : '';
+    hint.style.color = match ? 'var(--teal-600)' : '';
+  });
 }
 async function intentarAccesoProveedor(){
   const errEl = document.getElementById('proveedor-gate-error');
@@ -1102,6 +1119,32 @@ document.getElementById('formHabilitarProveedor').addEventListener('submit', asy
   e.target.reset();
   renderProveedoresAutorizadosList();
   persist('proveedoresAutorizados', state.proveedoresAutorizados, 'Proveedor habilitado y guardado.');
+});
+document.getElementById('btnHabilitarBulk').addEventListener('click', async ()=>{
+  const raw = document.getElementById('habBulkText').value;
+  const lineas = raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const resultado = document.getElementById('habBulkResultado');
+  let ok = 0, invalidas = 0;
+  for(const linea of lineas){
+    const partes = linea.split('|').map(s=>s.trim());
+    if(partes.length < 3 || !partes[0] || !partes[2]){ invalidas++; continue; }
+    const [ruc, razonSocial, correosRaw] = partes;
+    const correos = correosRaw.split(/[,;\s]+/).map(normalizar).filter(Boolean);
+    if(!correos.length){ invalidas++; continue; }
+    const hashes = await Promise.all(correos.map(c=>sha256(normalizar(ruc)+'|'+c)));
+    const existing = state.proveedoresAutorizados.find(p=>normalizar(p.ruc)===normalizar(ruc));
+    if(existing){
+      existing.razonSocial = razonSocial || existing.razonSocial;
+      existing.hashes = Array.from(new Set([...(existing.hashes||[]), ...hashes]));
+    } else {
+      state.proveedoresAutorizados.push({ ruc, razonSocial, hashes });
+    }
+    ok++;
+  }
+  document.getElementById('habBulkText').value = '';
+  renderProveedoresAutorizadosList();
+  resultado.textContent = `${ok} proveedor(es) cargado(s)${invalidas ? `, ${invalidas} línea(s) inválida(s) omitida(s)` : ''}.`;
+  if(ok) persist('proveedoresAutorizados', state.proveedoresAutorizados, `${ok} proveedor(es) guardado(s).`);
 });
 function renderSsomaGate(){
   if(state.unlocked.ssoma){ showSsomaContent(); return; }
