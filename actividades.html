@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Daily Call In — FRIOPACKING</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f1f5f9;color:#1e293b;font-size:13px}
+.nb{background:#0f172a;height:52px;display:flex;align-items:center;padding:0 14px;gap:10px;position:sticky;top:0;left:0;right:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+.fp{background:#166534;color:#fff;font-weight:800;font-size:13px;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand{display:flex;flex-direction:column;gap:1px}
+.b1{color:#e2e8f0;font-size:12px;font-weight:600;white-space:nowrap}
+.b2{color:#64748b;font-size:10px}
+.nbr{display:flex;gap:8px;flex-shrink:0;margin-left:auto;align-items:center}
+.btn{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif;text-decoration:none}
+.btn-inicio{background:#1e293b;color:#93c5fd;border:1px solid #334155}
+.btn-ghost{background:transparent;color:#94a3b8;border:1px solid #334155}
+.btn-ghost:hover{background:#1e293b;color:#e2e8f0}
+.pg{padding:18px 22px;max-width:1400px;margin:0 auto}
+.toolbar{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.daypick{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px}
+.daypick select{border:none;font-size:13px;font-weight:700;color:#0f172a;background:transparent;cursor:pointer}
+.daypick .lbl{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+.pill-vigente{background:#ecfdf5;color:#15803d;border:1px solid #bbf7d0;padding:4px 10px;border-radius:100px;font-size:11px;font-weight:700}
+.upd{margin-left:auto;font-size:11px;color:#94a3b8}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.kpi .kl{color:#64748b;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.kpi .kv{font-size:25px;font-weight:800;margin-top:6px;color:#0f172a}
+.kpi .kd{font-size:10.5px;margin-top:3px;color:#94a3b8}
+.kpi.good .kv{color:#16a34a}
+.kpi.warn .kv{color:#b45309}
+.kpi.bad .kv{color:#dc2626}
+.section-t{font-size:12px;font-weight:700;color:#334155;margin:18px 0 10px;text-transform:uppercase;letter-spacing:.4px}
+.resp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:6px}
+.resp-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px}
+.resp-card .rn{font-weight:700;font-size:12.5px;color:#0f172a}
+.resp-card .rs{display:flex;gap:10px;margin-top:8px;font-size:11px;color:#64748b}
+.resp-card .rs b{color:#0f172a}
+.barbg{height:5px;border-radius:4px;background:#e2e8f0;margin-top:8px;overflow:hidden}
+.barfg{height:100%;background:#16a34a;border-radius:4px}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.filters select,.filters input{padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;font-family:'Inter',sans-serif;background:#fff}
+.filters input{flex:1;min-width:180px}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+thead th{background:#f8fafc;color:#475569;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;text-align:left;padding:9px 10px;border-bottom:1px solid #e2e8f0}
+tbody td{padding:9px 10px;border-bottom:1px solid #f1f5f9;font-size:12px;vertical-align:top}
+tbody tr:hover{background:#f8fafc}
+.pill{display:inline-block;padding:3px 9px;border-radius:100px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.p-completado{background:#f0fdf4;color:#16a34a}
+.p-encurso{background:#fffbeb;color:#b45309}
+.p-pendiente{background:#fef2f2;color:#dc2626}
+.p-alta{background:#fef2f2;color:#dc2626}
+.p-media{background:#fffbeb;color:#b45309}
+.p-baja{background:#eff6ff;color:#1d4ed8}
+.p-default{background:#f1f5f9;color:#475569}
+.avance-cell{display:flex;align-items:center;gap:8px;min-width:90px}
+.avance-cell .barbg{flex:1;margin:0}
+.muted{color:#94a3b8}
+.empty-state{padding:70px 20px;text-align:center;color:#94a3b8}
+.empty-state .display{font-size:16px;font-weight:700;color:#475569;margin-bottom:6px}
+</style>
+</head>
+<body>
+
+<div class="nb">
+  <div class="fp">FP</div>
+  <div class="brand"><span class="b1">FRIOPACKING · <b>Daily Call In</b></span><span class="b2">Reporte diario del equipo — vista de solo lectura</span></div>
+  <div class="nbr">
+    <a href="https://melissa2026714.github.io/dashboard-friopacking/plataforma.html" class="btn btn-inicio">◀ INICIO</a>
+  </div>
+</div>
+
+<div class="pg" id="pg">
+  <div class="empty-state" id="emptyState" style="display:none">
+    <div class="display">Todavía no hay actividades cargadas</div>
+    <p>Se importan desde la Plataforma LOGÍSTICA — botón 📂 Importar.</p>
+  </div>
+  <div id="content" style="display:none">
+    <div class="toolbar">
+      <div class="daypick">
+        <span class="lbl">Día</span>
+        <select id="selDia" onchange="renderTodo()"></select>
+      </div>
+      <span class="pill-vigente" id="pillVigente" style="display:none">📌 Día más reciente cargado</span>
+      <span class="upd" id="updPill"></span>
+    </div>
+    <div class="kpis" id="kpis"></div>
+    <div class="section-t">Por responsable</div>
+    <div class="resp-grid" id="respGrid"></div>
+    <div class="section-t">Detalle de actividades</div>
+    <div class="filters">
+      <input id="fBuscar" type="text" placeholder="🔍 Buscar por título, obstáculo, próximos pasos…" oninput="renderTabla()">
+      <select id="fResp" onchange="renderTabla()"><option value="">Responsable: Todos</option></select>
+      <select id="fEstado" onchange="renderTabla()">
+        <option value="">Estado: Todos</option>
+        <option value="COMPLETADO">Completado</option>
+        <option value="EN CURSO">En curso</option>
+        <option value="PENDIENTE">Pendiente</option>
+      </select>
+      <select id="fPrioridad" onchange="renderTabla()">
+        <option value="">Prioridad: Todas</option>
+        <option value="ALTA">Alta</option>
+        <option value="MEDIA">Media</option>
+        <option value="BAJA">Baja</option>
+      </select>
+    </div>
+    <div id="tableWrap"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="assets/js/actividades-shared.js"></script>
+<script>
+let ACTIVIDADES = [];
+
+function estadoPill(estado){
+  const e = (estado||'').toUpperCase();
+  if(e.includes('COMPLET')) return `<span class="pill p-completado">✔ ${estado||'—'}</span>`;
+  if(e.includes('CURSO')) return `<span class="pill p-encurso">⏳ ${estado||'—'}</span>`;
+  if(e.includes('PENDIENT')) return `<span class="pill p-pendiente">● ${estado||'—'}</span>`;
+  return `<span class="pill p-default">${estado||'—'}</span>`;
+}
+function prioridadPill(p){
+  const u = (p||'').toUpperCase();
+  if(u.includes('ALTA')) return `<span class="pill p-alta">${p}</span>`;
+  if(u.includes('MEDIA')) return `<span class="pill p-media">${p}</span>`;
+  if(u.includes('BAJA')) return `<span class="pill p-baja">${p}</span>`;
+  return p ? `<span class="pill p-default">${p}</span>` : '<span class="muted">—</span>';
+}
+
+function diasDisponibles(){
+  const map = {};
+  ACTIVIDADES.forEach(r=>{ if(r.fechaTs) map[r.fechaTs] = r.fecha; });
+  return Object.keys(map).map(Number).sort((a,b)=>b-a).map(ts=>({ts, label:map[ts]}));
+}
+function diaSeleccionado(){
+  const sel = document.getElementById('selDia');
+  return sel.value ? +sel.value : 0;
+}
+function poblarSelDia(){
+  const dias = diasDisponibles();
+  const sel = document.getElementById('selDia');
+  sel.innerHTML = dias.map(d=>`<option value="${d.ts}">${d.label}</option>`).join('');
+  if(dias.length) sel.value = dias[0].ts; // el más reciente cargado — no la fecha del navegador
+  document.getElementById('pillVigente').style.display = dias.length ? 'inline-block' : 'none';
+}
+function poblarSelResp(items){
+  const sel = document.getElementById('fResp');
+  const cur = sel.value;
+  const nombres = [...new Set(items.map(r=>r.responsable).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Responsable: Todos</option>' + nombres.map(n=>`<option value="${n}">${n}</option>`).join('');
+  if(nombres.includes(cur)) sel.value = cur;
+}
+
+function itemsDelDia(){
+  const ts = diaSeleccionado();
+  return ACTIVIDADES.filter(r=>r.fechaTs===ts);
+}
+
+function renderKpis(items){
+  const total = items.length;
+  const completadas = items.filter(r=>r.estado.includes('COMPLET')).length;
+  const enCurso = items.filter(r=>r.estado.includes('CURSO')).length;
+  const pendientes = items.filter(r=>r.estado.includes('PENDIENT')).length;
+  const avgAvance = total ? Math.round(items.reduce((s,r)=>s+(r.avance||0),0)/total) : 0;
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><div class="kl">Total actividades</div><div class="kv">${total}</div><div class="kd">del día seleccionado</div></div>
+    <div class="kpi good"><div class="kl">Completadas</div><div class="kv">${completadas}</div><div class="kd">${total?Math.round(completadas/total*100):0}% del total</div></div>
+    <div class="kpi warn"><div class="kl">En curso</div><div class="kv">${enCurso}</div><div class="kd">${total?Math.round(enCurso/total*100):0}% del total</div></div>
+    <div class="kpi bad"><div class="kl">Pendientes</div><div class="kv">${pendientes}</div><div class="kd">${total?Math.round(pendientes/total*100):0}% del total</div></div>
+    <div class="kpi"><div class="kl">Avance promedio</div><div class="kv">${avgAvance}%</div><div class="kd">de las ${total} actividad(es)</div></div>
+  `;
+}
+
+function renderRespGrid(items){
+  const porResp = {};
+  items.forEach(r=>{
+    const k = r.responsable || '—';
+    if(!porResp[k]) porResp[k] = {total:0, completadas:0, avanceSum:0};
+    porResp[k].total++;
+    if(r.estado.includes('COMPLET')) porResp[k].completadas++;
+    porResp[k].avanceSum += (r.avance||0);
+  });
+  const nombres = Object.keys(porResp).sort();
+  document.getElementById('respGrid').innerHTML = nombres.map(n=>{
+    const d = porResp[n];
+    const avg = Math.round(d.avanceSum/d.total);
+    return `<div class="resp-card">
+      <div class="rn">${n}</div>
+      <div class="rs"><span><b>${d.total}</b> actividad(es)</span><span><b>${d.completadas}</b> completadas</span></div>
+      <div class="barbg"><div class="barfg" style="width:${avg}%"></div></div>
+      <div class="rs" style="margin-top:4px"><span>Avance promedio: <b>${avg}%</b></span></div>
+    </div>`;
+  }).join('') || '<div class="muted">Sin datos para este día.</div>';
+}
+
+function renderTabla(){
+  const items = itemsDelDia();
+  const q = (document.getElementById('fBuscar').value||'').toLowerCase();
+  const fResp = document.getElementById('fResp').value;
+  const fEstado = document.getElementById('fEstado').value;
+  const fPrioridad = document.getElementById('fPrioridad').value;
+  const filtered = items.filter(r=>{
+    if(fResp && r.responsable!==fResp) return false;
+    if(fEstado && r.estado!==fEstado) return false;
+    if(fPrioridad && r.prioridad!==fPrioridad) return false;
+    if(q && !(`${r.titulo} ${r.obstaculo} ${r.proximosPasos}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const wrap = document.getElementById('tableWrap');
+  if(!filtered.length){
+    wrap.innerHTML = `<div class="empty-state"><div class="display">Sin resultados</div><p>Ajusta los filtros o la búsqueda.</p></div>`;
+    return;
+  }
+  const rows = filtered.map(r=>`
+    <tr>
+      <td style="font-weight:600;min-width:180px">${r.titulo||'—'}</td>
+      <td style="white-space:nowrap">${r.responsable||'—'}</td>
+      <td>${estadoPill(r.estado)}</td>
+      <td>${prioridadPill(r.prioridad)}</td>
+      <td><div class="avance-cell"><div class="barbg"><div class="barfg" style="width:${r.avance}%;background:${r.avance>=100?'#16a34a':r.avance>0?'#b45309':'#dc2626'}"></div></div><span style="font-weight:700;font-size:11px">${r.avance}%</span></div></td>
+      <td style="min-width:160px">${r.obstaculo?r.obstaculo:'<span class="muted">—</span>'}</td>
+      <td style="min-width:160px">${r.proximosPasos?r.proximosPasos:'<span class="muted">—</span>'}</td>
+    </tr>`).join('');
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Título</th><th>Responsable</th><th>Estado</th><th>Prioridad</th><th>Avance</th><th>Obstáculo</th><th>Próximos pasos</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function renderTodo(){
+  const items = itemsDelDia();
+  renderKpis(items);
+  renderRespGrid(items);
+  poblarSelResp(items);
+  renderTabla();
+}
+
+async function init(){
+  const saved = await ActividadesShared.loadRemote();
+  if(!saved || !saved.actividades || !saved.actividades.length){
+    document.getElementById('emptyState').style.display = 'block';
+    return;
+  }
+  ACTIVIDADES = saved.actividades;
+  document.getElementById('content').style.display = 'block';
+  document.getElementById('updPill').textContent = '🕓 Últ. actualización: ' + new Date(saved.updatedAt).toLocaleString('es-PE');
+  poblarSelDia();
+  renderTodo();
+}
+init();
+</script>
+</body>
+</html>
