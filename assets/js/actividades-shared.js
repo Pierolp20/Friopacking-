@@ -70,6 +70,7 @@ function parseWorkbook(wb){
   const iAV   = gi('AVANCE');
   const iOBS  = gi('OBSTACULO');
   const iPROX = gi('PROXIMOS PASOS','PROXIMO PASO');
+  const iAREA = gi('AREA');
   const gv = (r,i)=> i>=0 ? String(r[i]==null?'':r[i]).trim() : '';
 
   const registros = raw.slice(hdrIdx+1)
@@ -83,6 +84,7 @@ function parseWorkbook(wb){
         fecha: fechaStr || gv(r,iFEC),
         fechaTs: fechaStrToTs(fechaStr),
         responsable: gv(r,iRESP),
+        area: gv(r,iAREA).toUpperCase(),
         estado: gv(r,iEST).toUpperCase(),
         prioridad: gv(r,iPRIO).toUpperCase(),
         avance: isNaN(avance)?0:Math.max(0,Math.min(100,avance)),

@@ -90,9 +90,12 @@ tbody tr:hover{background:#f8fafc}
     <div class="kpis" id="kpis"></div>
     <div class="section-t">Por responsable</div>
     <div class="resp-grid" id="respGrid"></div>
+    <div class="section-t">Por área</div>
+    <div class="resp-grid" id="areaGrid"></div>
     <div class="section-t">Detalle de actividades</div>
     <div class="filters">
       <input id="fBuscar" type="text" placeholder="🔍 Buscar por título, obstáculo, próximos pasos…" oninput="renderTabla()">
+      <select id="fArea" onchange="renderTabla()"><option value="">Área: Todas</option></select>
       <select id="fResp" onchange="renderTabla()"><option value="">Responsable: Todos</option></select>
       <select id="fEstado" onchange="renderTabla()">
         <option value="">Estado: Todos</option>
@@ -154,6 +157,13 @@ function poblarSelResp(items){
   sel.innerHTML = '<option value="">Responsable: Todos</option>' + nombres.map(n=>`<option value="${n}">${n}</option>`).join('');
   if(nombres.includes(cur)) sel.value = cur;
 }
+function poblarSelArea(items){
+  const sel = document.getElementById('fArea');
+  const cur = sel.value;
+  const areas = [...new Set(items.map(r=>r.area).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">Área: Todas</option>' + areas.map(a=>`<option value="${a}">${a}</option>`).join('');
+  if(areas.includes(cur)) sel.value = cur;
+}
 
 function itemsDelDia(){
   const ts = diaSeleccionado();
@@ -175,18 +185,18 @@ function renderKpis(items){
   `;
 }
 
-function renderRespGrid(items){
-  const porResp = {};
+function renderGrupoGrid(items, keyFn, elId){
+  const porGrupo = {};
   items.forEach(r=>{
-    const k = r.responsable || '—';
-    if(!porResp[k]) porResp[k] = {total:0, completadas:0, avanceSum:0};
-    porResp[k].total++;
-    if(r.estado.includes('COMPLET')) porResp[k].completadas++;
-    porResp[k].avanceSum += (r.avance||0);
+    const k = keyFn(r) || '—';
+    if(!porGrupo[k]) porGrupo[k] = {total:0, completadas:0, avanceSum:0};
+    porGrupo[k].total++;
+    if(r.estado.includes('COMPLET')) porGrupo[k].completadas++;
+    porGrupo[k].avanceSum += (r.avance||0);
   });
-  const nombres = Object.keys(porResp).sort();
-  document.getElementById('respGrid').innerHTML = nombres.map(n=>{
-    const d = porResp[n];
+  const nombres = Object.keys(porGrupo).sort();
+  document.getElementById(elId).innerHTML = nombres.map(n=>{
+    const d = porGrupo[n];
     const avg = Math.round(d.avanceSum/d.total);
     return `<div class="resp-card">
       <div class="rn">${n}</div>
@@ -196,14 +206,18 @@ function renderRespGrid(items){
     </div>`;
   }).join('') || '<div class="muted">Sin datos para este día.</div>';
 }
+function renderRespGrid(items){ renderGrupoGrid(items, r=>r.responsable, 'respGrid'); }
+function renderAreaGrid(items){ renderGrupoGrid(items, r=>r.area, 'areaGrid'); }
 
 function renderTabla(){
   const items = itemsDelDia();
   const q = (document.getElementById('fBuscar').value||'').toLowerCase();
+  const fArea = document.getElementById('fArea').value;
   const fResp = document.getElementById('fResp').value;
   const fEstado = document.getElementById('fEstado').value;
   const fPrioridad = document.getElementById('fPrioridad').value;
   const filtered = items.filter(r=>{
+    if(fArea && r.area!==fArea) return false;
     if(fResp && r.responsable!==fResp) return false;
     if(fEstado && r.estado!==fEstado) return false;
     if(fPrioridad && r.prioridad!==fPrioridad) return false;
@@ -218,6 +232,7 @@ function renderTabla(){
   const rows = filtered.map(r=>`
     <tr>
       <td style="font-weight:600;min-width:180px">${r.titulo||'—'}</td>
+      <td style="white-space:nowrap">${r.area||'<span class="muted">—</span>'}</td>
       <td style="white-space:nowrap">${r.responsable||'—'}</td>
       <td>${estadoPill(r.estado)}</td>
       <td>${prioridadPill(r.prioridad)}</td>
@@ -226,7 +241,7 @@ function renderTabla(){
       <td style="min-width:160px">${r.proximosPasos?r.proximosPasos:'<span class="muted">—</span>'}</td>
     </tr>`).join('');
   wrap.innerHTML = `<table>
-    <thead><tr><th>Título</th><th>Responsable</th><th>Estado</th><th>Prioridad</th><th>Avance</th><th>Obstáculo</th><th>Próximos pasos</th></tr></thead>
+    <thead><tr><th>Título</th><th>Área</th><th>Responsable</th><th>Estado</th><th>Prioridad</th><th>Avance</th><th>Obstáculo</th><th>Próximos pasos</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
@@ -235,7 +250,9 @@ function renderTodo(){
   const items = itemsDelDia();
   renderKpis(items);
   renderRespGrid(items);
+  renderAreaGrid(items);
   poblarSelResp(items);
+  poblarSelArea(items);
   renderTabla();
 }
 
