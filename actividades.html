@@ -39,6 +39,9 @@ body{font-family:'Inter',sans-serif;background:#f1f5f9;color:#1e293b;font-size:1
 .resp-card .rn{font-weight:700;font-size:12.5px;color:#0f172a}
 .resp-card .rs{display:flex;gap:10px;margin-top:8px;font-size:11px;color:#64748b}
 .resp-card .rs b{color:#0f172a}
+.area-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:16px}
+.area-grid .resp-card{padding:16px 18px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.area-grid .rn{font-size:14px}
 .barbg{height:5px;border-radius:4px;background:#e2e8f0;margin-top:8px;overflow:hidden}
 .barfg{height:100%;background:#16a34a;border-radius:4px}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
@@ -88,11 +91,9 @@ tbody tr:hover{background:#f8fafc}
       <span class="upd" id="updPill"></span>
     </div>
     <div class="kpis" id="kpis"></div>
-    <div class="section-t">Por responsable</div>
-    <div class="resp-grid" id="respGrid"></div>
-    <div class="section-t">Por área</div>
-    <div class="resp-grid" id="areaGrid"></div>
-    <div class="section-t">Detalle de actividades</div>
+    <div class="section-t">Resumen por área — Compras / Almacén / Comex</div>
+    <div class="resp-grid area-grid" id="areaGrid"></div>
+    <div class="section-t">Detalle de actividades <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">— usa el filtro Responsable abajo para ver el trabajo de una persona puntual</span></div>
     <div class="filters">
       <input id="fBuscar" type="text" placeholder="🔍 Buscar por título, obstáculo, próximos pasos…" oninput="renderTabla()">
       <select id="fArea" onchange="renderTabla()"><option value="">Área: Todas</option></select>
@@ -206,7 +207,6 @@ function renderGrupoGrid(items, keyFn, elId){
     </div>`;
   }).join('') || '<div class="muted">Sin datos para este día.</div>';
 }
-function renderRespGrid(items){ renderGrupoGrid(items, r=>r.responsable, 'respGrid'); }
 function renderAreaGrid(items){ renderGrupoGrid(items, r=>r.area, 'areaGrid'); }
 
 function renderTabla(){
@@ -249,7 +249,6 @@ function renderTabla(){
 function renderTodo(){
   const items = itemsDelDia();
   renderKpis(items);
-  renderRespGrid(items);
   renderAreaGrid(items);
   poblarSelResp(items);
   poblarSelArea(items);
