@@ -337,6 +337,8 @@ function renderTodo(){
 let personaActual = null;
 let autoEntries = [];
 let manualEntries = [];
+let editIndex = null;
+function escAttr(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
 function mostrarVista(id){
   ['vistaResumen','vistaArea','vistaPersona','vistaMiDia'].forEach(function(v){
@@ -360,15 +362,22 @@ async function elegirPersona(nombre){
   document.getElementById('miDiaSub').textContent = personaActual.area + ' · ' + ActividadesShared.hoyStr();
   document.getElementById('miDiaStatus').textContent = '';
   renderMiDiaTabla('Buscando lo que ya registraste hoy…');
+  let autoFresh = [];
   if(personaActual.area==='COMPRAS' || personaActual.comexImportaciones){
     const [D, facturas] = await Promise.all([ActividadesShared.fetchComprasData(), ActividadesShared.fetchFacturasData()]);
-    autoEntries = ActividadesShared.detectarAutomaticas(personaActual, D, facturas);
+    autoFresh = ActividadesShared.detectarAutomaticas(personaActual, D, facturas);
   } else if(personaActual.area==='ALMACÉN'){
     const D = await ActividadesShared.fetchComprasData();
-    autoEntries = ActividadesShared.detectarAutomaticas(personaActual, D);
-  } else {
-    autoEntries = [];
+    autoFresh = ActividadesShared.detectarAutomaticas(personaActual, D);
   }
+  // Si ya guardó hoy y editó alguna fila automática (por ejemplo, la marcó COMPLETADO más
+  // tarde), esa edición se respeta — las categorías que no tocó siguen viniendo en vivo.
+  const hoy = ActividadesShared.hoyStr();
+  const remoto = await ActividadesShared.loadRemote();
+  const guardadoHoy = (remoto && remoto.actividades) || [];
+  const merged = ActividadesShared.mergeConGuardadoHoy(personaActual, hoy, autoFresh, guardadoHoy);
+  autoEntries = merged.autoEntries;
+  manualEntries = merged.manualEntries;
   renderMiDiaTabla();
 }
 // Automáticas primero (detectadas de Compras), luego las manuales que se van
@@ -404,18 +413,45 @@ function renderMiDiaTabla(mensajeCargando){
     const manualIdx = e.auto ? -1 : i - autoEntries.length;
     const tieneDetalle = e.detalle && e.detalle.length;
     const abierto = !!expandedRows[i];
+    if(editIndex===i){
+      const filaEdicion = `<tr style="background:#fffbeb">
+        <td>${i+1}</td>
+        <td style="font-weight:600;min-width:160px">${e.titulo}${e.auto?autoTag():''}</td>
+        <td><select id="editEstado_${i}">
+          <option value="COMPLETADO" ${e.estado==='COMPLETADO'?'selected':''}>Completado</option>
+          <option value="EN CURSO" ${e.estado==='EN CURSO'?'selected':''}>En curso</option>
+          <option value="PENDIENTE" ${e.estado==='PENDIENTE'?'selected':''}>Pendiente</option>
+        </select></td>
+        <td><select id="editPrioridad_${i}">
+          <option value="ALTA" ${e.prioridad==='ALTA'?'selected':''}>Alta</option>
+          <option value="MEDIA" ${e.prioridad==='MEDIA'?'selected':''}>Media</option>
+          <option value="BAJA" ${e.prioridad==='BAJA'?'selected':''}>Baja</option>
+        </select></td>
+        <td><input id="editAvance_${i}" type="number" min="0" max="100" value="${e.avance||0}" style="width:64px"></td>
+        <td style="min-width:140px"><input id="editObstaculo_${i}" type="text" value="${escAttr(e.obstaculo)}" style="width:100%"></td>
+        <td style="min-width:140px"><input id="editProximos_${i}" type="text" value="${escAttr(e.proximosPasos)}" style="width:100%"></td>
+        <td style="white-space:nowrap">
+          <button class="mi-x" onclick="guardarEdicionFila(${i})" title="Guardar cambios">✔</button>
+          <button class="mi-x" onclick="cancelarEdicionFila()" title="Cancelar">✕</button>
+        </td>
+      </tr>`;
+      return filaEdicion;
+    }
     const tituloCell = tieneDetalle
       ? `<span onclick="toggleDetalle(${i})" style="cursor:pointer;text-decoration:underline dotted #94a3b8">${abierto?'▾':'▸'} ${e.titulo}</span>`
       : e.titulo;
     const filaPrincipal = `<tr>
       <td>${i+1}</td>
-      <td style="font-weight:600;min-width:160px">${tituloCell}${e.auto?autoTag():''}</td>
+      <td style="font-weight:600;min-width:160px">${tituloCell}${e.auto?autoTag():''}${e.editado?' <span class="muted" style="font-weight:400;font-size:10.5px">(editado)</span>':''}</td>
       <td>${estadoPill(e.estado)}</td>
       <td>${prioridadPill(e.prioridad)}</td>
       <td>${avanceCellHtml(e.avance)}</td>
       <td style="min-width:140px">${e.obstaculo||'<span class="muted">—</span>'}</td>
       <td style="min-width:140px">${e.proximosPasos||'<span class="muted">—</span>'}</td>
-      <td>${manualIdx>=0?`<button class="mi-x" onclick="quitarManual(${manualIdx})" title="Quitar">✕</button>`:''}</td>
+      <td style="white-space:nowrap">
+        <button class="mi-x" onclick="editarFila(${i})" title="Editar">✏️</button>
+        ${manualIdx>=0?`<button class="mi-x" onclick="quitarManual(${manualIdx})" title="Quitar">✕</button>`:''}
+      </td>
     </tr>`;
     if(!tieneDetalle || !abierto) return filaPrincipal;
     const subfilas = e.detalle.map(function(d){
@@ -440,6 +476,22 @@ function renderMiDiaTabla(mensajeCargando){
 let expandedRows = {};
 function toggleDetalle(i){ expandedRows[i] = !expandedRows[i]; renderMiDiaTabla(); }
 function quitarManual(i){ manualEntries.splice(i,1); renderMiDiaTabla(); }
+function editarFila(i){ editIndex=i; renderMiDiaTabla(); }
+function cancelarEdicionFila(){ editIndex=null; renderMiDiaTabla(); }
+function guardarEdicionFila(i){
+  const estado = document.getElementById('editEstado_'+i).value;
+  const prioridad = document.getElementById('editPrioridad_'+i).value;
+  const avanceRaw = +document.getElementById('editAvance_'+i).value || 0;
+  const avance = Math.max(0, Math.min(100, avanceRaw));
+  const obstaculo = document.getElementById('editObstaculo_'+i).value.trim();
+  const proximosPasos = document.getElementById('editProximos_'+i).value.trim();
+  const esAuto = i < autoEntries.length;
+  const e = esAuto ? autoEntries[i] : manualEntries[i-autoEntries.length];
+  Object.assign(e, {estado, prioridad, avance, obstaculo, proximosPasos});
+  if(esAuto) e.editado = true;
+  editIndex = null;
+  renderMiDiaTabla();
+}
 function agregarManual(){
   const titulo = document.getElementById('mTitulo').value.trim();
   if(!titulo){ alert('Escribe un título para la actividad.'); return; }

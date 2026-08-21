@@ -142,9 +142,9 @@ function detectarAutomaticas(persona, D, facturas){
   if(persona.area==='ALMACÉN'){
     if(!persona.revisorNombre) return out;
     const reqEntry = contarRevisiones(D.almacenRevisores, 'Revisión de requerimientos');
-    if(reqEntry) out.push(reqEntry);
+    if(reqEntry){ reqEntry.categoria='almacen_requerimientos'; out.push(reqEntry); }
     const despEntry = contarRevisiones(D.almacenRevisoresDespacho, 'Revisión de despachos');
-    if(despEntry) out.push(despEntry);
+    if(despEntry){ despEntry.categoria='almacen_despacho'; out.push(despEntry); }
     return out;
   }
   if(persona.comexImportaciones){
@@ -171,6 +171,7 @@ function detectarAutomaticas(persona, D, facturas){
         obstaculo: pendientes.length?(pendientes.length+' OC de importación sin las 3 fechas completas'):'',
         proximosPasos: pendientes.length?'Registrar Entrega Proveedor/Zarpe/ETA en Compras Directas':'',
         auto:true,
+        categoria:'comex_importaciones',
         detalle: importaciones.map(function(r){
           const m=ocMeta[r.oc]||{};
           const faltan=[];
@@ -204,6 +205,7 @@ function detectarAutomaticas(persona, D, facturas){
     out.push({
       titulo:'Órdenes de compra generadas — '+ocsHoy.length+' colocada(s) hoy',
       estado:'COMPLETADO', prioridad:'MEDIA', avance:100, obstaculo:'', proximosPasos:'', auto:true,
+      categoria:'oc_generadas',
       detalle: ocsHoy.map(function(r){
         // El próximo paso de toda OC generada es enviarla al proveedor — eso no cambia; lo
         // que sí cambia es si hay un obstáculo frenándolo (Manuel todavía no la aprueba).
@@ -223,6 +225,7 @@ function detectarAutomaticas(persona, D, facturas){
     out.push({
       titulo:'OC enviadas a proveedor — '+enviadasHoy.length+' hoy',
       estado:'COMPLETADO', prioridad:'MEDIA', avance:100, obstaculo:'', proximosPasos:'', auto:true,
+      categoria:'oc_enviadas',
       detalle: enviadasHoy.map(function(r){
         return {titulo:r.oc+' · '+(r.prov||'Proveedor no indicado'), estado:'COMPLETADO', prioridad:'MEDIA', avance:100, obstaculo:'', proximosPasos:''};
       }),
@@ -242,6 +245,7 @@ function detectarAutomaticas(persona, D, facturas){
         obstaculo: pendientes.length?('Quedan '+pendientes.length+' regularización(es) sin cerrar del lado Compras'):'',
         proximosPasos:'',
         auto:true,
+        categoria:'regularizaciones',
         detalle: misReg.map(function(r){
           const cerrada=ocMeta[r.oc].fcompras;
           return {titulo:r.oc+' · '+(r.prov||'Proveedor no indicado'), estado: cerrada?'COMPLETADO':'PENDIENTE', prioridad: cerrada?'MEDIA':'ALTA', avance: cerrada?100:0, obstaculo:'', proximosPasos:''};
@@ -272,6 +276,7 @@ function detectarAutomaticas(persona, D, facturas){
       obstaculo: vencidas.length?(vencidas.length+' OC vencida(s) sin guía ni factura'):'',
       proximosPasos:'',
       auto:true,
+      categoria:'cierre_oc',
       detalle: sinCerrar.map(function(o){
         const tieneFactura=(o.facturaRefs||[]).length>0;
         const tieneGuia=(o.guiaRefs||[]).length>0;
@@ -304,6 +309,7 @@ function detectarAutomaticas(persona, D, facturas){
         obstaculo: pendientes.length?'Falta cotizar '+pendientes.length+' ítem(s) sin OC':'',
         proximosPasos:'',
         auto:true,
+        categoria:'cotizaciones',
         detalle: misSinOC.map(function(r){
           const cotizada=!!cotMeta[keyOf(r)];
           return {titulo:(r.cod||'—')+' · '+(r.prod||'Ítem sin descripción'), estado: cotizada?'COMPLETADO':'PENDIENTE', prioridad: cotizada?'MEDIA':'ALTA', avance: cotizada?100:0, obstaculo:'', proximosPasos:''};
@@ -312,6 +318,29 @@ function detectarAutomaticas(persona, D, facturas){
     }
   }
   return out;
+}
+// Si la persona ya guardó su día hoy y edita una fila automática (por ejemplo, marca como
+// COMPLETADO algo que terminó más tarde), esa edición no debe perderse la próxima vez que
+// entra y se vuelve a correr la detección — pero las categorías que NO tocó sí deben seguir
+// actualizándose solas con la data en vivo. "editado:true" es lo que congela una categoría.
+function mergeConGuardadoHoy(persona, fecha, autoFresh, guardadoHoy){
+  const editadasPorCategoria={};
+  const manualesGuardadas=[];
+  (guardadoHoy||[]).forEach(function(e){
+    if(e.responsable!==persona.nombre || e.fecha!==fecha) return;
+    if(e.auto && e.categoria && e.editado){ editadasPorCategoria[e.categoria]=e; }
+    else if(!e.auto){ manualesGuardadas.push(Object.assign({},e)); }
+  });
+  const autoMerged = autoFresh.map(function(fresco){
+    const guardada = fresco.categoria && editadasPorCategoria[fresco.categoria];
+    if(!guardada) return fresco;
+    return Object.assign({}, fresco, {
+      titulo:guardada.titulo, estado:guardada.estado, prioridad:guardada.prioridad,
+      avance:guardada.avance, obstaculo:guardada.obstaculo, proximosPasos:guardada.proximosPasos,
+      editado:true,
+    });
+  });
+  return {autoEntries:autoMerged, manualEntries:manualesGuardadas};
 }
 // Guarda el día de UNA persona sin pisar lo que ya registraron las demás — se
 // quita cualquier entrada previa de esa misma persona+fecha (por si vuelve a
@@ -347,5 +376,5 @@ async function saveMisActividades(persona, fecha, fechaTs, entries){
 }
 
 return { loadRemote, setupGHToken, getToken, GH_TOKEN_KEY,
-  EQUIPO, hoyStr, fetchComprasData, fetchFacturasData, detectarAutomaticas, saveMisActividades };
+  EQUIPO, hoyStr, fetchComprasData, fetchFacturasData, detectarAutomaticas, mergeConGuardadoHoy, saveMisActividades };
 })();
