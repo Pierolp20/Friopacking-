@@ -522,10 +522,25 @@ function renderMiDiaTabla(mensajeCargando){
       </td>
     </tr>`;
     if(!tieneDetalle || !abierto) return filaPrincipal;
+    // Si el detalle trae proyecto/pedido (hoy solo Cotizaciones), se intercalan encabezados de
+    // grupo antes de cada ítem individual — sin eso, se ve igual que siempre (lista plana).
+    const tieneGrupos = e.detalle.some(function(d){return d.proy||d.ped;});
+    let proyAnterior=null, pedAnterior=null;
     const subfilas = e.detalle.map(function(d){
-      return `<tr style="background:#f8fafc">
+      let encabezados='';
+      if(tieneGrupos){
+        if(d.proy!==proyAnterior){
+          encabezados+=`<tr style="background:#eef2f7"><td></td><td colspan="7" style="padding:5px 8px;font-size:11.5px;font-weight:700;color:#376B9E">📁 ${d.proy}</td></tr>`;
+          proyAnterior=d.proy; pedAnterior=null;
+        }
+        if(d.ped!==pedAnterior){
+          encabezados+=`<tr style="background:#f8fafc"><td></td><td colspan="7" style="padding:4px 8px 4px 20px;font-size:11px;font-weight:600;color:#5a6268">📄 Pedido ${d.ped}</td></tr>`;
+          pedAnterior=d.ped;
+        }
+      }
+      return encabezados+`<tr style="background:#f8fafc">
         <td></td>
-        <td style="padding-left:26px;font-size:11.5px">↳ ${d.titulo}</td>
+        <td style="padding-left:${tieneGrupos?'34':'26'}px;font-size:11.5px">↳ ${d.titulo}</td>
         <td>${estadoPill(d.estado)}</td>
         <td>${prioridadPill(d.prioridad)}</td>
         <td style="font-size:11.5px">${d.avance}%</td>

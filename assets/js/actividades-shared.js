@@ -110,6 +110,16 @@ function esFechaHoraDeHoy(fechaHoraStr){
   const hoy = new Date();
   return +m[1]===hoy.getDate() && +m[2]===(hoy.getMonth()+1) && +m[3]===hoy.getFullYear();
 }
+// Convierte dd/mm/aaaa a un número comparable (aaaammdd) — para filtrar por rango de fechas
+// sin liar con objetos Date. Fecha inválida o vacía = 0 (queda siempre antes de cualquier corte).
+function fechaOrd(f){
+  const m = String(f||'').match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(!m) return 0;
+  return (+m[3])*10000 + (+m[2])*100 + (+m[1]);
+}
+// A partir de qué fecha de OC se empieza a exigir el seguimiento de "enviar al proveedor" —
+// las OC más antiguas sin correo son backlog previo al proceso, no una tarea real de hoy.
+const FECHA_CORTE_ENVIO_OC=fechaOrd('25/06/2026');
 function detectarAutomaticas(persona, D, facturas){
   facturas = facturas || [];
   const out=[];
@@ -233,7 +243,7 @@ function detectarAutomaticas(persona, D, facturas){
   }
   // OC aprobadas que TODAVÍA no se enviaron nunca — sin importar qué día se generaron. Distinto
   // de "OC enviadas hoy": esto es lo que sigue pendiente de mandar, sea de hoy o de días atrás.
-  const pendientesEnviar=misOC.filter(function(r){return r.estado==='Pendiente (Aprobado)' && !(ocMeta[r.oc]&&ocMeta[r.oc].correo);});
+  const pendientesEnviar=misOC.filter(function(r){return r.estado==='Pendiente (Aprobado)' && !(ocMeta[r.oc]&&ocMeta[r.oc].correo) && fechaOrd(r.foc)>=FECHA_CORTE_ENVIO_OC;});
   if(pendientesEnviar.length){
     out.push({
       titulo:'OC pendientes de enviar al proveedor — '+pendientesEnviar.length+' sin correo',
@@ -323,9 +333,14 @@ function detectarAutomaticas(persona, D, facturas){
         proximosPasos:'',
         auto:true,
         categoria:'cotizaciones',
-        detalle: misSinOC.map(function(r){
+        // Ordenado por proyecto y luego por pedido antes de mapear, para que la tabla pueda
+        // agrupar visualmente (mismo orden en que aparecen) sin tener que volver a ordenar ahí.
+        detalle: misSinOC.slice().sort(function(a,b){
+          const pa=(a.proy||'')+'|'+(a.ped||''), pb=(b.proy||'')+'|'+(b.ped||'');
+          return pa<pb?-1:pa>pb?1:0;
+        }).map(function(r){
           const cotizada=!!cotMeta[keyOf(r)];
-          return {titulo:(r.cod||'—')+' · '+(r.prod||'Ítem sin descripción'), estado: cotizada?'COMPLETADO':'PENDIENTE', prioridad: cotizada?'MEDIA':'ALTA', avance: cotizada?100:0, obstaculo:'', proximosPasos:''};
+          return {titulo:(r.cod||'—')+' · '+(r.prod||'Ítem sin descripción'), estado: cotizada?'COMPLETADO':'PENDIENTE', prioridad: cotizada?'MEDIA':'ALTA', avance: cotizada?100:0, obstaculo:'', proximosPasos:'', proy:r.proy||'Sin proyecto', ped:r.ped||'Sin pedido'};
         }),
       });
     }
