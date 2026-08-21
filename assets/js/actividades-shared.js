@@ -52,7 +52,10 @@ const EQUIPO = [
   {nombre:'Jose Pomez', area:'COMPRAS', ucomp:'JPOMEZ'},
   {nombre:'Jaime Altamirano', area:'COMPRAS', ucomp:'JALTAMIRANO'},
   {nombre:'Jose Casarino', area:'COMEX'},
-  {nombre:'Camila Mora', area:'COMEX'},
+  // comexImportaciones: cruza D.p4 (Compras Directas) filtrando OC tipo 0002 (Importaciones)
+  // y las 3 fechas manuales que ella misma llena en compras.html (fEntregaProv/fZarpe/eta) —
+  // ver OC_META_FECHA_CAMPOS en compras.html. Jose Casarino hace nacionalización, no esto.
+  {nombre:'Camila Mora', area:'COMEX', comexImportaciones:true},
   // revisorNombre: como aparece en inventario.html (REVISORES=['Mary','Javier','Katherine','Jose']),
   // para cruzar el historial de "quién revisó qué requerimiento y cuándo" (D.almacenRevisores).
   {nombre:'Katherine', area:'ALMACÉN', revisorNombre:'Katherine'},
@@ -78,6 +81,20 @@ async function fetchComprasData(){
     return null;
   }
 }
+const GH_FACTURAS_RAW='https://raw.githubusercontent.com/'+GH_REPO+'/main/facturas_piloto.json';
+// Solo lectura de facturas_piloto.json — para detectar OC del comprador que siguen sin
+// guía y/o sin factura (cerrar ese flujo es parte de su trabajo diario).
+async function fetchFacturasData(){
+  try{
+    const res = await fetchTO(GH_FACTURAS_RAW+'?t='+Date.now());
+    if(!res.ok) return [];
+    const j = await res.json();
+    return (j && j.ordenes && j.ordenes.orders) || [];
+  }catch(e){
+    console.error('No se pudo leer facturas_piloto.json para el cruce automático', e);
+    return [];
+  }
+}
 // Regularizaciones cerradas hoy (check "COMPRAS" con fecha de hoy), envío de OC
 // por correo hoy, y cotizaciones marcadas hoy — todo tal como ya lo registra
 // Compras, sin que la persona tenga que volver a escribirlo a mano.
@@ -93,7 +110,8 @@ function esFechaHoraDeHoy(fechaHoraStr){
   const hoy = new Date();
   return +m[1]===hoy.getDate() && +m[2]===(hoy.getMonth()+1) && +m[3]===hoy.getFullYear();
 }
-function detectarAutomaticas(persona, D){
+function detectarAutomaticas(persona, D, facturas){
+  facturas = facturas || [];
   const out=[];
   if(!D) return out;
   const hoy=hoyStr();
@@ -129,9 +147,87 @@ function detectarAutomaticas(persona, D){
     if(despEntry) out.push(despEntry);
     return out;
   }
+  if(persona.comexImportaciones){
+    const ocMeta=D.ocMeta||{};
+    // Solo las OC de Compras Directas (D.p4) de Tipo Importaciones (arrancan con "0002")
+    // llevan las 3 fechas manuales; las Nacionales (0001) no aplican — igual que en
+    // importTrackingCellsHtml() de compras.html. Se excluyen las ya Atendido Completo.
+    const importaciones=(D.p4||[]).filter(function(r){return String(r.oc).startsWith('0002') && r.estado!=='Atendido Completo';});
+    // Cruce de solo lectura con NEXO (facturas_piloto.json, origen 'sinreq' = Compras Directas)
+    // para saber si la OC es a crédito o al contado — no es lo mismo la urgencia de una que
+    // vence en 5 días a crédito que una al contado sin fecha de pago encima.
+    const facturaPorOC={};
+    facturas.forEach(function(f){ if(f.origen==='sinreq') facturaPorOC[f.codOrden]=f; });
+    const pendientes=importaciones.filter(function(r){
+      const m=ocMeta[r.oc]||{};
+      return !m.fEntregaProv || !m.fZarpe || !m.eta;
+    });
+    if(importaciones.length){
+      out.push({
+        titulo:'Seguimiento de importaciones — '+pendientes.length+' de '+importaciones.length+' OC con fechas pendientes',
+        estado: pendientes.length===0?'COMPLETADO':(pendientes.length<importaciones.length?'EN CURSO':'PENDIENTE'),
+        prioridad: pendientes.some(function(r){const f=facturaPorOC[r.oc];return f&&f.riesgoBloqueo;})?'ALTA':'MEDIA',
+        avance: Math.round((importaciones.length-pendientes.length)/importaciones.length*100),
+        obstaculo: pendientes.length?(pendientes.length+' OC de importación sin las 3 fechas completas'):'',
+        proximosPasos: pendientes.length?'Registrar Entrega Proveedor/Zarpe/ETA en Compras Directas':'',
+        auto:true,
+        detalle: importaciones.map(function(r){
+          const m=ocMeta[r.oc]||{};
+          const faltan=[];
+          if(!m.fEntregaProv) faltan.push('Entrega Proveedor');
+          if(!m.fZarpe) faltan.push('Zarpe');
+          if(!m.eta) faltan.push('ETA');
+          const f=facturaPorOC[r.oc];
+          const condicion=f?(f.diasCredito>0?'Crédito '+f.diasCredito+'d':'Contado'):'';
+          return {
+            titulo:r.oc+' · '+(r.prov||'Proveedor no indicado'),
+            estado: faltan.length===0?'COMPLETADO':(faltan.length<3?'EN CURSO':'PENDIENTE'),
+            prioridad: (f&&f.riesgoBloqueo)?'ALTA':'MEDIA',
+            avance: Math.round((3-faltan.length)/3*100),
+            obstaculo: faltan.length?('Falta: '+faltan.join(', ')+(condicion?' · '+condicion:'')):(condicion||''),
+            proximosPasos: faltan.length?'Actualizar en Compras Directas':'',
+          };
+        }),
+      });
+    }
+    return out;
+  }
   if(persona.area!=='COMPRAS' || !persona.ucomp) return out;
   const ocMeta=D.ocMeta||{};
   const misOC=(D.oc||[]).filter(function(r){return r.ucomp===persona.ucomp;});
+  // Cada bloque sale AGRUPADO por defecto (Manuel no quiere 60+ filas sueltas cada día);
+  // el detalle individual (uno por OC/ítem) va en "detalle" y la tabla lo despliega al
+  // hacer clic — así se puede seguir cada OC/cotización por separado sin saturar la vista.
+  // Órdenes de compra generadas hoy (fecha de OC = hoy)
+  const ocsHoy=misOC.filter(function(r){return r.foc===hoy;});
+  if(ocsHoy.length){
+    out.push({
+      titulo:'Órdenes de compra generadas — '+ocsHoy.length+' colocada(s) hoy',
+      estado:'COMPLETADO', prioridad:'MEDIA', avance:100, obstaculo:'', proximosPasos:'', auto:true,
+      detalle: ocsHoy.map(function(r){
+        // El próximo paso de toda OC generada es enviarla al proveedor — eso no cambia; lo
+        // que sí cambia es si hay un obstáculo frenándolo (Manuel todavía no la aprueba).
+        const sinAprobar=r.estado==='Pendiente (Sin Aprobar)';
+        return {
+          titulo:r.oc+' · '+(r.prov||'Proveedor no indicado'),
+          estado:'COMPLETADO', prioridad:'MEDIA', avance:100,
+          obstaculo: sinAprobar?'Pendiente de aprobación de Manuel':'',
+          proximosPasos:'Enviar al proveedor',
+        };
+      }),
+    });
+  }
+  // OC enviadas a proveedor (correo) hoy
+  const enviadasHoy=misOC.filter(function(r){return ocMeta[r.oc]&&ocMeta[r.oc].correo&&ocMeta[r.oc].fcorreo===hoy;});
+  if(enviadasHoy.length){
+    out.push({
+      titulo:'OC enviadas a proveedor — '+enviadasHoy.length+' hoy',
+      estado:'COMPLETADO', prioridad:'MEDIA', avance:100, obstaculo:'', proximosPasos:'', auto:true,
+      detalle: enviadasHoy.map(function(r){
+        return {titulo:r.oc+' · '+(r.prov||'Proveedor no indicado'), estado:'COMPLETADO', prioridad:'MEDIA', avance:100, obstaculo:'', proximosPasos:''};
+      }),
+    });
+  }
   // Regularizaciones
   const misReg=misOC.filter(function(r){return ocMeta[r.oc]&&ocMeta[r.oc].reg;});
   if(misReg.length){
@@ -144,22 +240,51 @@ function detectarAutomaticas(persona, D){
         prioridad: pendientes.length>0?'ALTA':'MEDIA',
         avance: Math.round((misReg.length-pendientes.length)/misReg.length*100),
         obstaculo: pendientes.length?('Quedan '+pendientes.length+' regularización(es) sin cerrar del lado Compras'):'',
-        proximosPasos: pendientes.length?('Cerrar: '+pendientes.slice(0,5).map(function(r){return r.oc;}).join(', ')+(pendientes.length>5?'…':'')):'',
+        proximosPasos:'',
         auto:true,
+        detalle: misReg.map(function(r){
+          const cerrada=ocMeta[r.oc].fcompras;
+          return {titulo:r.oc+' · '+(r.prov||'Proveedor no indicado'), estado: cerrada?'COMPLETADO':'PENDIENTE', prioridad: cerrada?'MEDIA':'ALTA', avance: cerrada?100:0, obstaculo:'', proximosPasos:''};
+        }),
       });
     }
   }
-  // OC enviadas a proveedor (correo) hoy
-  const enviadasHoy=misOC.filter(function(r){return ocMeta[r.oc]&&ocMeta[r.oc].correo&&ocMeta[r.oc].fcorreo===hoy;});
-  if(enviadasHoy.length){
+  // Cierre de OC (guía y/o factura pendiente) — cruce con facturas_piloto.json. Solo las que
+  // llevan más de 3 días sin cerrar (las recién generadas tienen su tiempo normal de trámite).
+  const TRES_DIAS_MS=3*24*60*60*1000;
+  const ahora=new Date();
+  const misOrdenesFact=facturas.filter(function(o){return o.usuarioCompras===persona.ucomp;});
+  const sinCerrar=misOrdenesFact.filter(function(o){
+    const abierta=o.statusFactura!=='anulado' && ((o.facturaRefs||[]).length===0 || (o.guiaRefs||[]).length===0);
+    if(!abierta) return false;
+    if(!o.fechaOrden) return false;
+    const fo=new Date(o.fechaOrden);
+    if(isNaN(fo.getTime())) return false;
+    return (ahora-fo)>TRES_DIAS_MS;
+  });
+  if(sinCerrar.length){
+    const vencidas=sinCerrar.filter(function(o){return o.riesgoBloqueo;});
     out.push({
-      titulo:'Envío de OC a proveedores — '+enviadasHoy.length+' enviada(s) hoy',
-      estado:'COMPLETADO',
-      prioridad:'MEDIA',
-      avance:100,
-      obstaculo:'',
-      proximosPasos:'OC: '+enviadasHoy.slice(0,6).map(function(r){return r.oc;}).join(', ')+(enviadasHoy.length>6?'…':''),
+      titulo:'Cierre de OC (guía/factura) — '+sinCerrar.length+' pendiente(s) de más de 3 días'+(vencidas.length?' ('+vencidas.length+' vencida(s))':''),
+      estado: vencidas.length?'PENDIENTE':'EN CURSO',
+      prioridad: vencidas.length?'ALTA':'MEDIA',
+      avance:0,
+      obstaculo: vencidas.length?(vencidas.length+' OC vencida(s) sin guía ni factura'):'',
+      proximosPasos:'',
       auto:true,
+      detalle: sinCerrar.map(function(o){
+        const tieneFactura=(o.facturaRefs||[]).length>0;
+        const tieneGuia=(o.guiaRefs||[]).length>0;
+        const falta = !tieneFactura&&!tieneGuia ? 'guía y factura' : (!tieneGuia?'guía':'factura');
+        return {
+          titulo:o.codOrden+' · '+(o.nombreProveedor||'Proveedor no indicado'),
+          estado: o.riesgoBloqueo?'PENDIENTE':'EN CURSO',
+          prioridad: o.riesgoBloqueo?'ALTA':'MEDIA',
+          avance:(tieneFactura?50:0)+(tieneGuia?50:0),
+          obstaculo:'Falta '+falta+(o.riesgoBloqueo?' — OC vencida':''),
+          proximosPasos:'',
+        };
+      }),
     });
   }
   // Cotizaciones (Sin OC) — por nombre, ya que sinoc no tiene código de comprador
@@ -179,6 +304,10 @@ function detectarAutomaticas(persona, D){
         obstaculo: pendientes.length?'Falta cotizar '+pendientes.length+' ítem(s) sin OC':'',
         proximosPasos:'',
         auto:true,
+        detalle: misSinOC.map(function(r){
+          const cotizada=!!cotMeta[keyOf(r)];
+          return {titulo:(r.cod||'—')+' · '+(r.prod||'Ítem sin descripción'), estado: cotizada?'COMPLETADO':'PENDIENTE', prioridad: cotizada?'MEDIA':'ALTA', avance: cotizada?100:0, obstaculo:'', proximosPasos:''};
+        }),
       });
     }
   }
@@ -218,5 +347,5 @@ async function saveMisActividades(persona, fecha, fechaTs, entries){
 }
 
 return { loadRemote, setupGHToken, getToken, GH_TOKEN_KEY,
-  EQUIPO, hoyStr, fetchComprasData, detectarAutomaticas, saveMisActividades };
+  EQUIPO, hoyStr, fetchComprasData, fetchFacturasData, detectarAutomaticas, saveMisActividades };
 })();

@@ -163,6 +163,7 @@ h2{font-size:19px;font-weight:800;color:#0f172a;margin:0}
   <h2 id="miDiaTitulo" style="margin-top:16px">Mi Daily Call In</h2>
   <p class="view-sub" id="miDiaSub"></p>
   <div style="max-width:900px;margin-top:14px">
+    <div class="kpis" id="miDiaKpis" style="margin-bottom:14px"></div>
     <div id="miDiaTablaWrap"></div>
     <div class="section-t" style="margin-top:16px">Agregar otra actividad</div>
     <div class="form-grid">
@@ -198,6 +199,13 @@ function prioridadPill(p){
   if(u.includes('MEDIA')) return `<span class="pill p-media">${p}</span>`;
   if(u.includes('BAJA')) return `<span class="pill p-baja">${p}</span>`;
   return p ? `<span class="pill p-default">${p}</span>` : '<span class="muted">—</span>';
+}
+function avanceCellHtml(avance){
+  const color = avance>=100?'#16a34a':avance>0?'#b45309':'#dc2626';
+  return `<div class="avance-cell"><div class="barbg"><div class="barfg" style="width:${avance}%;background:${color}"></div></div><span style="font-weight:700;font-size:11px">${avance}%</span></div>`;
+}
+function autoTag(){
+  return '<span style="display:inline-flex;align-items:center;gap:3px;background:#eff6ff;color:#376B9E;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:100px;margin-left:6px;vertical-align:middle">🤖 AUTO</span>';
 }
 
 function diasDisponibles(){
@@ -346,12 +354,16 @@ async function elegirPersona(nombre){
   personaActual = ActividadesShared.EQUIPO.find(p=>p.nombre===nombre);
   if(!personaActual) return;
   manualEntries = [];
+  expandedRows = {};
   mostrarVista('vistaMiDia');
   document.getElementById('miDiaTitulo').textContent = 'Mi Daily Call In — ' + personaActual.nombre;
   document.getElementById('miDiaSub').textContent = personaActual.area + ' · ' + ActividadesShared.hoyStr();
   document.getElementById('miDiaStatus').textContent = '';
   renderMiDiaTabla('Buscando lo que ya registraste hoy…');
-  if(personaActual.area==='COMPRAS' || personaActual.area==='ALMACÉN'){
+  if(personaActual.area==='COMPRAS' || personaActual.comexImportaciones){
+    const [D, facturas] = await Promise.all([ActividadesShared.fetchComprasData(), ActividadesShared.fetchFacturasData()]);
+    autoEntries = ActividadesShared.detectarAutomaticas(personaActual, D, facturas);
+  } else if(personaActual.area==='ALMACÉN'){
     const D = await ActividadesShared.fetchComprasData();
     autoEntries = ActividadesShared.detectarAutomaticas(personaActual, D);
   } else {
@@ -362,9 +374,24 @@ async function elegirPersona(nombre){
 // Automáticas primero (detectadas de Compras), luego las manuales que se van
 // agregando — todo en una sola tabla, mismo formato que enseñaron en la
 // capacitación (N°, Pendiente, Estado, Prioridad, Avance, Obstáculo, Próximos pasos).
+function renderMiDiaKpis(items){
+  const total=items.length;
+  const completadas=items.filter(e=>e.estado.includes('COMPLET')).length;
+  const enCurso=items.filter(e=>e.estado.includes('CURSO')).length;
+  const pendientes=items.filter(e=>e.estado.includes('PENDIENT')).length;
+  const avg=total?Math.round(items.reduce((s,e)=>s+(e.avance||0),0)/total):0;
+  document.getElementById('miDiaKpis').innerHTML = `
+    <div class="kpi"><div class="kl">Total actividades</div><div class="kv">${total}</div><div class="kd">registradas hoy</div></div>
+    <div class="kpi good"><div class="kl">Completadas</div><div class="kv">${completadas}</div></div>
+    <div class="kpi warn"><div class="kl">En curso</div><div class="kv">${enCurso}</div></div>
+    <div class="kpi bad"><div class="kl">Pendientes</div><div class="kv">${pendientes}</div></div>
+    <div class="kpi"><div class="kl">Avance promedio</div><div class="kv">${avg}%</div></div>
+  `;
+}
 function renderMiDiaTabla(mensajeCargando){
   const wrap = document.getElementById('miDiaTablaWrap');
   const todas = autoEntries.concat(manualEntries);
+  renderMiDiaKpis(todas);
   if(mensajeCargando && !todas.length){
     wrap.innerHTML = '<div class="muted" style="font-size:12px">'+mensajeCargando+'</div>';
     return;
@@ -375,22 +402,43 @@ function renderMiDiaTabla(mensajeCargando){
   }
   const rows = todas.map((e,i)=>{
     const manualIdx = e.auto ? -1 : i - autoEntries.length;
-    return `<tr>
+    const tieneDetalle = e.detalle && e.detalle.length;
+    const abierto = !!expandedRows[i];
+    const tituloCell = tieneDetalle
+      ? `<span onclick="toggleDetalle(${i})" style="cursor:pointer;text-decoration:underline dotted #94a3b8">${abierto?'▾':'▸'} ${e.titulo}</span>`
+      : e.titulo;
+    const filaPrincipal = `<tr>
       <td>${i+1}</td>
-      <td style="font-weight:600;min-width:160px">${e.titulo}${e.auto?' <span class="muted" style="font-weight:400;font-size:10.5px">(auto)</span>':''}</td>
+      <td style="font-weight:600;min-width:160px">${tituloCell}${e.auto?autoTag():''}</td>
       <td>${estadoPill(e.estado)}</td>
       <td>${prioridadPill(e.prioridad)}</td>
-      <td>${e.avance}%</td>
+      <td>${avanceCellHtml(e.avance)}</td>
       <td style="min-width:140px">${e.obstaculo||'<span class="muted">—</span>'}</td>
       <td style="min-width:140px">${e.proximosPasos||'<span class="muted">—</span>'}</td>
       <td>${manualIdx>=0?`<button class="mi-x" onclick="quitarManual(${manualIdx})" title="Quitar">✕</button>`:''}</td>
     </tr>`;
+    if(!tieneDetalle || !abierto) return filaPrincipal;
+    const subfilas = e.detalle.map(function(d){
+      return `<tr style="background:#f8fafc">
+        <td></td>
+        <td style="padding-left:26px;font-size:11.5px">↳ ${d.titulo}</td>
+        <td>${estadoPill(d.estado)}</td>
+        <td>${prioridadPill(d.prioridad)}</td>
+        <td style="font-size:11.5px">${d.avance}%</td>
+        <td style="font-size:11.5px;min-width:140px">${d.obstaculo||'<span class="muted">—</span>'}</td>
+        <td style="font-size:11.5px;min-width:140px">${d.proximosPasos||'<span class="muted">—</span>'}</td>
+        <td></td>
+      </tr>`;
+    }).join('');
+    return filaPrincipal+subfilas;
   }).join('');
   wrap.innerHTML = `<table>
     <thead><tr><th>N°</th><th>Pendiente</th><th>Estado</th><th>Prioridad</th><th>Avance</th><th>Obstáculo</th><th>Próximos pasos</th><th></th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
+let expandedRows = {};
+function toggleDetalle(i){ expandedRows[i] = !expandedRows[i]; renderMiDiaTabla(); }
 function quitarManual(i){ manualEntries.splice(i,1); renderMiDiaTabla(); }
 function agregarManual(){
   const titulo = document.getElementById('mTitulo').value.trim();
@@ -413,7 +461,13 @@ function agregarManual(){
 }
 async function guardarMiDia(){
   if(!personaActual) return;
-  const entries = autoEntries.concat(manualEntries);
+  // "detalle" es solo para desplegar en pantalla — no se guarda, el resumen del director
+  // ve el agregado; si necesita el detalle vuelve a entrar como esa persona a verlo en vivo.
+  const entries = autoEntries.concat(manualEntries).map(function(e){
+    const copia = Object.assign({}, e);
+    delete copia.detalle;
+    return copia;
+  });
   if(!entries.length){ alert('Agrega al menos una actividad (o espera a que se detecte algo automático) antes de guardar.'); return; }
   const status = document.getElementById('miDiaStatus');
   status.textContent = '⏳ Guardando…';
