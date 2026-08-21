@@ -48,38 +48,63 @@ body{font-family:'Inter',sans-serif;background:#f1f5f9;color:#1e293b;font-size:1
 .filters select,.filters input{padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;font-family:'Inter',sans-serif;background:#fff}
 .filters input{flex:1;min-width:180px}
 table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-thead th{background:#f8fafc;color:#475569;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;text-align:left;padding:9px 10px;border-bottom:1px solid #e2e8f0}
-tbody td{padding:9px 10px;border-bottom:1px solid #f1f5f9;font-size:12px;vertical-align:top}
-tbody tr:hover{background:#f8fafc}
-.pill{display:inline-block;padding:3px 9px;border-radius:100px;font-size:10.5px;font-weight:700;white-space:nowrap}
-.p-completado{background:#f0fdf4;color:#16a34a}
-.p-encurso{background:#fffbeb;color:#b45309}
-.p-pendiente{background:#fef2f2;color:#dc2626}
-.p-alta{background:#fef2f2;color:#dc2626}
-.p-media{background:#fffbeb;color:#b45309}
-.p-baja{background:#eff6ff;color:#1d4ed8}
-.p-default{background:#f1f5f9;color:#475569}
+thead th{background:#376B9E;color:#fff;font-size:11px;font-weight:700;text-align:left;padding:10px 12px}
+tbody td{padding:10px 12px;border-bottom:1px solid #f1f5f9;font-size:12.5px;vertical-align:top}
+tbody tr:nth-child(even){background:#F7FAFC}
+tbody tr:hover{background:#f0f6fb}
+.pill{display:inline-block;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;white-space:nowrap}
+.p-completado{background:#DCEEFF;color:#2f7a5c;background:#E1F0E7}
+.p-encurso{background:#DCEEFF;color:#376B9E}
+.p-pendiente{background:#E8ECEF;color:#5a6268}
+.p-alta{background:none;color:#376B9E;font-weight:800;padding:0}
+.p-media{background:none;color:#376B9E;font-weight:700;padding:0}
+.p-baja{background:none;color:#5F8FBF;font-weight:700;padding:0}
+.p-default{background:#E8ECEF;color:#475569}
 .avance-cell{display:flex;align-items:center;gap:8px;min-width:90px}
 .avance-cell .barbg{flex:1;margin:0}
 .muted{color:#94a3b8}
 .empty-state{padding:70px 20px;text-align:center;color:#94a3b8}
 .empty-state .display{font-size:16px;font-weight:700;color:#475569;margin-bottom:6px}
+.btn-user{background:#0d9488;color:#fff}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:9000;align-items:center;justify-content:center;padding:20px}
+.modal-bg.active{display:flex}
+.modal-card{background:#fff;width:100%;max-width:640px;max-height:90vh;overflow-y:auto;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.modal-hdr{background:#0d9488;color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center}
+.modal-hdr .t{font-size:15px;font-weight:800}
+.modal-hdr .s{font-size:11px;color:#ccfbf1;margin-top:2px}
+.modal-close{background:rgba(255,255,255,.18);border:none;color:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px}
+.modal-body{padding:20px 22px}
+.persona-grupo{margin-bottom:16px}
+.persona-grupo-t{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.persona-btn{display:block;width:100%;text-align:left;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-bottom:6px;cursor:pointer;font-size:13px;font-weight:600;color:#0f172a;font-family:'Inter',sans-serif}
+.persona-btn:hover{background:#f0fdfa;border-color:#0d9488}
+.mi-x{background:none;border:none;color:#dc2626;cursor:pointer;font-size:14px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.form-grid input,.form-grid select,.form-grid textarea{padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:12.5px;font-family:'Inter',sans-serif;width:100%}
+.form-grid .full{grid-column:1/-1}
+h2{font-size:19px;font-weight:800;color:#0f172a;margin:0}
+.view-sub{color:#64748b;font-size:13px;margin-top:4px}
+.area-pick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:20px;max-width:600px}
+.area-pick-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:28px 16px;text-align:center;font-size:15px;font-weight:700;color:#0f172a;cursor:pointer;font-family:'Inter',sans-serif}
+.area-pick-card:hover{border-color:#0d9488;background:#f0fdfa}
+.area-pick-card .ic{font-size:30px;display:block;margin-bottom:8px}
 </style>
 </head>
 <body>
 
 <div class="nb">
   <div class="fp">FP</div>
-  <div class="brand"><span class="b1">FRIOPACKING · <b>Daily Call In</b></span><span class="b2">Reporte diario del equipo — vista de solo lectura</span></div>
+  <div class="brand"><span class="b1">FRIOPACKING · <b>Daily Call In</b></span><span class="b2">Reporte diario del equipo — resumen para dirección</span></div>
   <div class="nbr">
+    <button class="btn btn-user" onclick="mostrarVista('vistaArea')">👤 Usuario — registrar mi día</button>
     <a href="https://melissa2026714.github.io/dashboard-friopacking/plataforma.html" class="btn btn-inicio">◀ INICIO</a>
   </div>
 </div>
 
-<div class="pg" id="pg">
+<div class="pg view" id="vistaResumen">
   <div class="empty-state" id="emptyState" style="display:none">
     <div class="display">Todavía no hay actividades cargadas</div>
-    <p>Se importan desde la Plataforma LOGÍSTICA — botón 📂 Importar.</p>
+    <p>Registra tu día con el botón 👤 Usuario, arriba a la derecha.</p>
   </div>
   <div id="content" style="display:none">
     <div class="toolbar">
@@ -115,16 +140,56 @@ tbody tr:hover{background:#f8fafc}
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<div class="pg view" id="vistaArea" style="display:none">
+  <h2>¿Cuál es tu área?</h2>
+  <p class="view-sub">Elige tu área para registrar tu Daily Call In de hoy.</p>
+  <div class="area-pick-grid">
+    <button class="area-pick-card" onclick="elegirArea('COMPRAS')"><span class="ic">🛒</span>Compras</button>
+    <button class="area-pick-card" onclick="elegirArea('ALMACÉN')"><span class="ic">📦</span>Almacén</button>
+    <button class="area-pick-card" onclick="elegirArea('COMEX')"><span class="ic">🌐</span>Comex</button>
+  </div>
+  <button class="btn btn-ghost" style="margin-top:20px" onclick="mostrarVista('vistaResumen')">← Volver al resumen</button>
+</div>
+
+<div class="pg view" id="vistaPersona" style="display:none">
+  <button class="btn btn-ghost" onclick="mostrarVista('vistaArea')">← Cambiar de área</button>
+  <h2 id="personaAreaTitulo" style="margin-top:16px">¿Quién eres?</h2>
+  <p class="view-sub">Elige tu nombre.</p>
+  <div id="personaListWrap" style="margin-top:14px;max-width:360px"></div>
+</div>
+
+<div class="pg view" id="vistaMiDia" style="display:none">
+  <button class="btn btn-ghost" onclick="mostrarVista('vistaResumen')">← Volver al resumen</button>
+  <h2 id="miDiaTitulo" style="margin-top:16px">Mi Daily Call In</h2>
+  <p class="view-sub" id="miDiaSub"></p>
+  <div style="max-width:900px;margin-top:14px">
+    <div id="miDiaTablaWrap"></div>
+    <div class="section-t" style="margin-top:16px">Agregar otra actividad</div>
+    <div class="form-grid">
+      <input type="text" id="mTitulo" placeholder="Título de la actividad" class="full">
+      <select id="mEstado"><option value="COMPLETADO">Completado</option><option value="EN CURSO" selected>En curso</option><option value="PENDIENTE">Pendiente</option></select>
+      <select id="mPrioridad"><option value="ALTA">Alta</option><option value="MEDIA" selected>Media</option><option value="BAJA">Baja</option></select>
+      <input type="number" id="mAvance" placeholder="Avance %" min="0" max="100" value="0">
+      <input type="text" id="mObstaculo" placeholder="Obstáculo (opcional)">
+      <input type="text" id="mProximos" placeholder="Próximos pasos (opcional)" class="full">
+    </div>
+    <button class="btn btn-ghost" style="margin-top:10px;color:#0d9488;border-color:#0d9488" onclick="agregarManual()">+ Agregar actividad</button>
+    <div style="margin-top:18px;display:flex;gap:8px">
+      <button class="btn btn-user" style="flex:1;justify-content:center;padding:10px" onclick="guardarMiDia()">💾 Guardar mi día</button>
+    </div>
+    <div id="miDiaStatus" style="font-size:11px;color:#0d9488;margin-top:8px;min-height:14px"></div>
+  </div>
+</div>
+
 <script src="assets/js/actividades-shared.js"></script>
 <script>
 let ACTIVIDADES = [];
 
 function estadoPill(estado){
   const e = (estado||'').toUpperCase();
-  if(e.includes('COMPLET')) return `<span class="pill p-completado">✔ ${estado||'—'}</span>`;
-  if(e.includes('CURSO')) return `<span class="pill p-encurso">⏳ ${estado||'—'}</span>`;
-  if(e.includes('PENDIENT')) return `<span class="pill p-pendiente">● ${estado||'—'}</span>`;
+  if(e.includes('COMPLET')) return `<span class="pill p-completado">${estado||'—'}</span>`;
+  if(e.includes('CURSO')) return `<span class="pill p-encurso">${estado||'—'}</span>`;
+  if(e.includes('PENDIENT')) return `<span class="pill p-pendiente">${estado||'—'}</span>`;
   return `<span class="pill p-default">${estado||'—'}</span>`;
 }
 function prioridadPill(p){
@@ -229,8 +294,9 @@ function renderTabla(){
     wrap.innerHTML = `<div class="empty-state"><div class="display">Sin resultados</div><p>Ajusta los filtros o la búsqueda.</p></div>`;
     return;
   }
-  const rows = filtered.map(r=>`
+  const rows = filtered.map((r,i)=>`
     <tr>
+      <td>${i+1}</td>
       <td style="font-weight:600;min-width:180px">${r.titulo||'—'}</td>
       <td style="white-space:nowrap">${r.area||'<span class="muted">—</span>'}</td>
       <td style="white-space:nowrap">${r.responsable||'—'}</td>
@@ -241,7 +307,7 @@ function renderTabla(){
       <td style="min-width:160px">${r.proximosPasos?r.proximosPasos:'<span class="muted">—</span>'}</td>
     </tr>`).join('');
   wrap.innerHTML = `<table>
-    <thead><tr><th>Título</th><th>Área</th><th>Responsable</th><th>Estado</th><th>Prioridad</th><th>Avance</th><th>Obstáculo</th><th>Próximos pasos</th></tr></thead>
+    <thead><tr><th>N°</th><th>Pendiente</th><th>Área</th><th>Responsable</th><th>Estado</th><th>Prioridad</th><th>Avance</th><th>Obstáculo</th><th>Próximos pasos</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
 }
@@ -253,6 +319,111 @@ function renderTodo(){
   poblarSelResp(items);
   poblarSelArea(items);
   renderTabla();
+}
+
+/* ============================================================
+   REGISTRO POR PERSONA — cada uno elige su nombre y registra su día:
+   lo detectado automáticamente desde Compras (regularizaciones, envío de
+   OC, cotizaciones) + lo que agregue a mano. Reemplaza al Excel de LISTS.
+   ============================================================ */
+let personaActual = null;
+let autoEntries = [];
+let manualEntries = [];
+
+function mostrarVista(id){
+  ['vistaResumen','vistaArea','vistaPersona','vistaMiDia'].forEach(function(v){
+    document.getElementById(v).style.display = (v===id) ? 'block' : 'none';
+  });
+  window.scrollTo(0,0);
+}
+function elegirArea(area){
+  const personas = ActividadesShared.EQUIPO.filter(p=>p.area===area);
+  document.getElementById('personaAreaTitulo').textContent = area;
+  document.getElementById('personaListWrap').innerHTML = personas.map(p=>`<button class="persona-btn" onclick="elegirPersona('${p.nombre.replace(/'/g,"\\'")}')">${p.nombre}</button>`).join('');
+  mostrarVista('vistaPersona');
+}
+async function elegirPersona(nombre){
+  personaActual = ActividadesShared.EQUIPO.find(p=>p.nombre===nombre);
+  if(!personaActual) return;
+  manualEntries = [];
+  mostrarVista('vistaMiDia');
+  document.getElementById('miDiaTitulo').textContent = 'Mi Daily Call In — ' + personaActual.nombre;
+  document.getElementById('miDiaSub').textContent = personaActual.area + ' · ' + ActividadesShared.hoyStr();
+  document.getElementById('miDiaStatus').textContent = '';
+  renderMiDiaTabla('Buscando lo que ya registraste hoy…');
+  if(personaActual.area==='COMPRAS' || personaActual.area==='ALMACÉN'){
+    const D = await ActividadesShared.fetchComprasData();
+    autoEntries = ActividadesShared.detectarAutomaticas(personaActual, D);
+  } else {
+    autoEntries = [];
+  }
+  renderMiDiaTabla();
+}
+// Automáticas primero (detectadas de Compras), luego las manuales que se van
+// agregando — todo en una sola tabla, mismo formato que enseñaron en la
+// capacitación (N°, Pendiente, Estado, Prioridad, Avance, Obstáculo, Próximos pasos).
+function renderMiDiaTabla(mensajeCargando){
+  const wrap = document.getElementById('miDiaTablaWrap');
+  const todas = autoEntries.concat(manualEntries);
+  if(mensajeCargando && !todas.length){
+    wrap.innerHTML = '<div class="muted" style="font-size:12px">'+mensajeCargando+'</div>';
+    return;
+  }
+  if(!todas.length){
+    wrap.innerHTML = '<div class="muted" style="font-size:12px">Todavía no hay actividades — se detectarán solas si tu área tiene cruce automático, o agrégalas abajo.</div>';
+    return;
+  }
+  const rows = todas.map((e,i)=>{
+    const manualIdx = e.auto ? -1 : i - autoEntries.length;
+    return `<tr>
+      <td>${i+1}</td>
+      <td style="font-weight:600;min-width:160px">${e.titulo}${e.auto?' <span class="muted" style="font-weight:400;font-size:10.5px">(auto)</span>':''}</td>
+      <td>${estadoPill(e.estado)}</td>
+      <td>${prioridadPill(e.prioridad)}</td>
+      <td>${e.avance}%</td>
+      <td style="min-width:140px">${e.obstaculo||'<span class="muted">—</span>'}</td>
+      <td style="min-width:140px">${e.proximosPasos||'<span class="muted">—</span>'}</td>
+      <td>${manualIdx>=0?`<button class="mi-x" onclick="quitarManual(${manualIdx})" title="Quitar">✕</button>`:''}</td>
+    </tr>`;
+  }).join('');
+  wrap.innerHTML = `<table>
+    <thead><tr><th>N°</th><th>Pendiente</th><th>Estado</th><th>Prioridad</th><th>Avance</th><th>Obstáculo</th><th>Próximos pasos</th><th></th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+function quitarManual(i){ manualEntries.splice(i,1); renderMiDiaTabla(); }
+function agregarManual(){
+  const titulo = document.getElementById('mTitulo').value.trim();
+  if(!titulo){ alert('Escribe un título para la actividad.'); return; }
+  const avanceRaw = +document.getElementById('mAvance').value || 0;
+  manualEntries.push({
+    titulo,
+    estado: document.getElementById('mEstado').value,
+    prioridad: document.getElementById('mPrioridad').value,
+    avance: Math.max(0,Math.min(100,avanceRaw)),
+    obstaculo: document.getElementById('mObstaculo').value.trim(),
+    proximosPasos: document.getElementById('mProximos').value.trim(),
+    auto:false,
+  });
+  document.getElementById('mTitulo').value='';
+  document.getElementById('mAvance').value='0';
+  document.getElementById('mObstaculo').value='';
+  document.getElementById('mProximos').value='';
+  renderMiDiaTabla();
+}
+async function guardarMiDia(){
+  if(!personaActual) return;
+  const entries = autoEntries.concat(manualEntries);
+  if(!entries.length){ alert('Agrega al menos una actividad (o espera a que se detecte algo automático) antes de guardar.'); return; }
+  const status = document.getElementById('miDiaStatus');
+  status.textContent = '⏳ Guardando…';
+  try{
+    await ActividadesShared.saveMisActividades(personaActual, ActividadesShared.hoyStr(), Date.now(), entries);
+    status.textContent = '✅ Guardado — gracias ' + personaActual.nombre;
+    setTimeout(async ()=>{ mostrarVista('vistaResumen'); await init(); }, 1200);
+  }catch(e){
+    status.innerHTML = '<span style="color:#dc2626">❌ '+e.message+'</span>';
+  }
 }
 
 async function init(){
