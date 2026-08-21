@@ -441,7 +441,11 @@ async function elegirPersona(nombre){
   const guardadoHoy = (remoto && remoto.actividades) || [];
   const merged = ActividadesShared.mergeConGuardadoHoy(personaActual, hoy, autoFresh, guardadoHoy);
   autoEntries = merged.autoEntries;
-  manualEntries = merged.manualEntries;
+  // No pisar: si la persona ya escribió una actividad manual mientras esto cargaba (la carga
+  // ahora tarda más por el chequeo de lo ya guardado), esa entrada nunca se guardó en el
+  // servidor todavía, así que no puede estar duplicada en merged.manualEntries — se antepone
+  // lo del servidor y se conserva lo que ya haya en pantalla.
+  manualEntries = merged.manualEntries.concat(manualEntries);
   renderMiDiaTabla();
 }
 // Automáticas primero (detectadas de Compras), luego las manuales que se van
