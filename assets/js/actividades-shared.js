@@ -231,6 +231,19 @@ function detectarAutomaticas(persona, D, facturas){
       }),
     });
   }
+  // OC aprobadas que TODAVÍA no se enviaron nunca — sin importar qué día se generaron. Distinto
+  // de "OC enviadas hoy": esto es lo que sigue pendiente de mandar, sea de hoy o de días atrás.
+  const pendientesEnviar=misOC.filter(function(r){return r.estado==='Pendiente (Aprobado)' && !(ocMeta[r.oc]&&ocMeta[r.oc].correo);});
+  if(pendientesEnviar.length){
+    out.push({
+      titulo:'OC pendientes de enviar al proveedor — '+pendientesEnviar.length+' sin correo',
+      estado:'PENDIENTE', prioridad:'ALTA', avance:0, obstaculo:'', proximosPasos:'Enviar correo al proveedor', auto:true,
+      categoria:'oc_pendientes_enviar',
+      detalle: pendientesEnviar.map(function(r){
+        return {titulo:r.oc+' · '+(r.prov||'Proveedor no indicado'), estado:'PENDIENTE', prioridad:'ALTA', avance:0, obstaculo:'', proximosPasos:'Enviar correo al proveedor'};
+      }),
+    });
+  }
   // Regularizaciones
   const misReg=misOC.filter(function(r){return ocMeta[r.oc]&&ocMeta[r.oc].reg;});
   if(misReg.length){

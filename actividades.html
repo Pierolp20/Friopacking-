@@ -44,6 +44,16 @@ body{font-family:'Inter',sans-serif;background:#f1f5f9;color:#1e293b;font-size:1
 .area-grid .rn{font-size:14px}
 .barbg{height:5px;border-radius:4px;background:#e2e8f0;margin-top:8px;overflow:hidden}
 .barfg{height:100%;background:#16a34a;border-radius:4px}
+.logistica-box{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:22px 26px;display:flex;gap:32px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:16px}
+.gauge-ring{width:148px;height:148px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:conic-gradient(var(--gc,#16a34a) calc(var(--pct,0)*1%),#e2e8f0 0)}
+.gauge-inner{width:114px;height:114px;border-radius:50%;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.gauge-inner .gv{font-size:27px;font-weight:800;color:#0f172a;line-height:1}
+.gauge-inner .gl{font-size:9.5px;color:#64748b;text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-top:4px;text-align:center}
+.logistica-areas{flex:1;display:flex;flex-direction:column;gap:13px;min-width:260px}
+.la-row .la-top{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;margin-bottom:5px}
+.la-row .la-top b{color:#0f172a;font-weight:700}
+.la-row .la-pct{font-weight:800;color:#0f172a}
+.la-row .la-meta{font-size:10.5px;color:#94a3b8;margin-top:3px}
 .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .filters select,.filters input{padding:7px 10px;border:1px solid #cbd5e1;border-radius:8px;font-size:12px;font-family:'Inter',sans-serif;background:#fff}
 .filters input{flex:1;min-width:180px}
@@ -116,9 +126,9 @@ h2{font-size:19px;font-weight:800;color:#0f172a;margin:0}
       <span class="upd" id="updPill"></span>
     </div>
     <div class="kpis" id="kpis"></div>
-    <div class="section-t">Resumen por área — Compras / Almacén / Comex</div>
-    <div class="resp-grid area-grid" id="areaGrid"></div>
-    <div class="section-t">Detalle de actividades <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">— usa el filtro Responsable abajo para ver el trabajo de una persona puntual</span></div>
+    <div class="section-t">Avance de logística — Compras / Almacén / Comex</div>
+    <div class="logistica-box" id="logisticaBox"></div>
+    <div class="section-t">Resumen por responsable <span class="muted" style="font-weight:400;text-transform:none;letter-spacing:0">— haz clic en una persona o usa el filtro Responsable para ver su detalle de actividades</span></div>
     <div class="filters">
       <input id="fBuscar" type="text" placeholder="🔍 Buscar por título, obstáculo, próximos pasos…" oninput="renderTabla()">
       <select id="fArea" onchange="renderTabla()"><option value="">Área: Todas</option></select>
@@ -259,7 +269,7 @@ function renderKpis(items){
   `;
 }
 
-function renderGrupoGrid(items, keyFn, elId){
+function renderGrupoGrid(items, keyFn, elId, onclickFn){
   const porGrupo = {};
   items.forEach(r=>{
     const k = keyFn(r) || '—';
@@ -272,7 +282,8 @@ function renderGrupoGrid(items, keyFn, elId){
   document.getElementById(elId).innerHTML = nombres.map(n=>{
     const d = porGrupo[n];
     const avg = Math.round(d.avanceSum/d.total);
-    return `<div class="resp-card">
+    const click = onclickFn ? ` style="cursor:pointer" onclick="${onclickFn(n)}"` : '';
+    return `<div class="resp-card"${click}>
       <div class="rn">${n}</div>
       <div class="rs"><span><b>${d.total}</b> actividad(es)</span><span><b>${d.completadas}</b> completadas</span></div>
       <div class="barbg"><div class="barfg" style="width:${avg}%"></div></div>
@@ -280,8 +291,49 @@ function renderGrupoGrid(items, keyFn, elId){
     </div>`;
   }).join('') || '<div class="muted">Sin datos para este día.</div>';
 }
-function renderAreaGrid(items){ renderGrupoGrid(items, r=>r.area, 'areaGrid'); }
+// "Avance de Logística" — una sola cifra visual (gauge) que resume las 3 áreas,
+// más el detalle de cada una debajo. Solo promedia las áreas que tienen datos
+// ese día, para no mostrar 0% en un área que simplemente no registró nada.
+const AREAS_LOGISTICA = ['COMPRAS','ALMACÉN','COMEX'];
+function renderLogistica(items){
+  const porArea = {};
+  items.forEach(r=>{
+    const k = r.area || '—';
+    if(!porArea[k]) porArea[k] = {total:0, completadas:0, avanceSum:0};
+    porArea[k].total++;
+    if(r.estado.includes('COMPLET')) porArea[k].completadas++;
+    porArea[k].avanceSum += (r.avance||0);
+  });
+  const conDatos = AREAS_LOGISTICA.filter(a=>porArea[a] && porArea[a].total);
+  const avgPorArea = conDatos.map(a=>Math.round(porArea[a].avanceSum/porArea[a].total));
+  const overall = avgPorArea.length ? Math.round(avgPorArea.reduce((s,v)=>s+v,0)/avgPorArea.length) : 0;
+  const gaugeColor = overall>=70?'#16a34a':overall>=40?'#b45309':'#dc2626';
+  const filas = AREAS_LOGISTICA.map(a=>{
+    const d = porArea[a];
+    if(!d || !d.total){
+      return `<div class="la-row"><div class="la-top"><b>${a}</b><span class="muted">Sin datos hoy</span></div><div class="barbg"><div class="barfg" style="width:0%"></div></div></div>`;
+    }
+    const avg = Math.round(d.avanceSum/d.total);
+    const color = avg>=70?'#16a34a':avg>=40?'#b45309':'#dc2626';
+    return `<div class="la-row">
+      <div class="la-top"><b>${a}</b><span class="la-pct">${avg}%</span></div>
+      <div class="barbg"><div class="barfg" style="width:${avg}%;background:${color}"></div></div>
+      <div class="la-meta">${d.total} actividad(es) · ${d.completadas} completada(s)</div>
+    </div>`;
+  }).join('');
+  document.getElementById('logisticaBox').innerHTML = `
+    <div class="gauge-ring" style="--pct:${overall};--gc:${gaugeColor}">
+      <div class="gauge-inner"><div class="gv">${overall}%</div><div class="gl">Avance<br>Logística</div></div>
+    </div>
+    <div class="logistica-areas">${filas}</div>
+  `;
+}
 
+function seleccionarResponsable(nombre){
+  document.getElementById('fResp').value = nombre;
+  renderTabla();
+  document.getElementById('tableWrap').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
 function renderTabla(){
   const items = itemsDelDia();
   const q = (document.getElementById('fBuscar').value||'').toLowerCase();
@@ -298,8 +350,19 @@ function renderTabla(){
     return true;
   });
   const wrap = document.getElementById('tableWrap');
+  // Sin una persona puntual elegida: resumen por responsable (no la lista de
+  // actividades una por una). Al elegir un responsable (clic en su tarjeta o
+  // filtro) recién se muestra su detalle fila por fila.
+  if(!fResp){
+    if(!filtered.length){
+      wrap.innerHTML = `<div class="empty-state"><div class="display">Sin resultados</div><p>Ajusta los filtros o la búsqueda.</p></div>`;
+      return;
+    }
+    renderGrupoGrid(filtered, r=>r.responsable, 'tableWrap', n=>`seleccionarResponsable('${n.replace(/'/g,"\\'")}')`);
+    return;
+  }
   if(!filtered.length){
-    wrap.innerHTML = `<div class="empty-state"><div class="display">Sin resultados</div><p>Ajusta los filtros o la búsqueda.</p></div>`;
+    wrap.innerHTML = `<div class="empty-state"><div class="display">Sin resultados</div><p>Ajusta los filtros o la búsqueda.</p><button class="btn btn-ghost" style="margin-top:10px" onclick="seleccionarResponsable('')">← Volver al resumen</button></div>`;
     return;
   }
   const rows = filtered.map((r,i)=>`
@@ -314,7 +377,8 @@ function renderTabla(){
       <td style="min-width:160px">${r.obstaculo?r.obstaculo:'<span class="muted">—</span>'}</td>
       <td style="min-width:160px">${r.proximosPasos?r.proximosPasos:'<span class="muted">—</span>'}</td>
     </tr>`).join('');
-  wrap.innerHTML = `<table>
+  wrap.innerHTML = `<button class="btn btn-ghost" style="margin-bottom:10px" onclick="seleccionarResponsable('')">← Volver al resumen por responsable</button>
+  <table>
     <thead><tr><th>N°</th><th>Pendiente</th><th>Área</th><th>Responsable</th><th>Estado</th><th>Prioridad</th><th>Avance</th><th>Obstáculo</th><th>Próximos pasos</th></tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
@@ -323,7 +387,7 @@ function renderTabla(){
 function renderTodo(){
   const items = itemsDelDia();
   renderKpis(items);
-  renderAreaGrid(items);
+  renderLogistica(items);
   poblarSelResp(items);
   poblarSelArea(items);
   renderTabla();
